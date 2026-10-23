@@ -1,0 +1,933 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WHSG-DRA Diagnostic Demo</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Segoe UI', Tahoma, sans-serif;
+    background: #0f172a;
+    color: #e2e8f0;
+    min-height: 100vh;
+    padding: 20px;
+  }
+  .container { max-width: 1200px; margin: 0 auto; }
+  header {
+    text-align: center;
+    padding: 30px 20px;
+    background: linear-gradient(135deg, #1e3a8a, #7c3aed);
+    border-radius: 16px;
+    margin-bottom: 24px;
+  }
+  header h1 { font-size: 28px; margin-bottom: 8px; }
+  header p { color: #cbd5e1; font-size: 14px; }
+  .badge {
+    display: inline-block;
+    background: #10b981;
+    color: white;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    margin-top: 10px;
+  }
+  .panel {
+    background: #1e293b;
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 20px;
+    border: 1px solid #334155;
+  }
+  .panel h2 {
+    font-size: 18px;
+    margin-bottom: 16px;
+    color: #60a5fa;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .panel h2::before {
+    content: '';
+    width: 4px;
+    height: 18px;
+    background: #60a5fa;
+    border-radius: 2px;
+  }
+  button {
+    background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+    margin-right: 10px;
+    margin-bottom: 10px;
+  }
+  button:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(59,130,246,0.4); }
+  button.secondary {
+    background: #334155;
+    color: #e2e8f0;
+  }
+  button.secondary:hover { box-shadow: 0 8px 20px rgba(51,65,85,0.6); }
+  .student-selector {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 16px;
+  }
+  .student-btn {
+    background: #334155;
+    padding: 10px 20px;
+    border-radius: 8px;
+    cursor: pointer;
+    border: 2px solid transparent;
+    transition: all 0.2s;
+    font-size: 14px;
+  }
+  .student-btn.active {
+    background: #3b82f6;
+    border-color: #60a5fa;
+  }
+  .student-btn:hover { background: #475569; }
+  .student-btn.active:hover { background: #3b82f6; }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  @media (max-width: 768px) { .grid { grid-template-columns: 1fr; } }
+  .stat-card {
+    background: #0f172a;
+    padding: 16px;
+    border-radius: 10px;
+    border: 1px solid #334155;
+  }
+  .stat-card .label { font-size: 12px; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; }
+  .stat-card .value { font-size: 28px; font-weight: 700; margin-top: 4px; }
+  .stat-card .value.good { color: #10b981; }
+  .stat-card .value.warn { color: #f59e0b; }
+  .stat-card .value.bad { color: #ef4444; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th, td { padding: 10px; text-align: left; border-bottom: 1px solid #334155; }
+  th { color: #94a3b8; font-weight: 600; font-size: 12px; text-transform: uppercase; }
+  tr:hover { background: #0f172a; }
+  .band {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+  }
+  .band.mastered { background: #065f46; color: #10b981; }
+  .band.developing { background: #78350f; color: #f59e0b; }
+  .band.needs { background: #7f1d1d; color: #ef4444; }
+  .band.notassessed { background: #1e293b; color: #64748b; }
+  .error-bar {
+    display: flex;
+    height: 30px;
+    border-radius: 8px;
+    overflow: hidden;
+    margin: 12px 0;
+  }
+  .error-bar div {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 600;
+    color: white;
+  }
+  .error-f { background: #ef4444; }
+  .error-p { background: #f59e0b; }
+  .error-c { background: #8b5cf6; }
+  .rec-item {
+    background: #0f172a;
+    padding: 14px;
+    border-radius: 8px;
+    margin-bottom: 10px;
+    border-left: 4px solid #3b82f6;
+  }
+  .rec-item .rank { font-size: 12px; color: #60a5fa; font-weight: 700; }
+  .rec-item .title { font-weight: 600; margin: 4px 0; }
+  .rec-item .desc { font-size: 12px; color: #94a3b8; }
+  .brief {
+    background: #0f172a;
+    padding: 20px;
+    border-radius: 10px;
+    border: 1px dashed #60a5fa;
+    font-family: 'Consolas', monospace;
+    font-size: 13px;
+    white-space: pre-wrap;
+    line-height: 1.6;
+    color: #cbd5e1;
+  }
+  .hidden { display: none; }
+  .progress-bar {
+    height: 8px;
+    background: #334155;
+    border-radius: 4px;
+    overflow: hidden;
+    margin-top: 6px;
+  }
+  .progress-bar div {
+    height: 100%;
+    border-radius: 4px;
+    transition: width 0.6s ease;
+  }
+  footer {
+    text-align: center;
+    padding: 20px;
+    color: #64748b;
+    font-size: 12px;
+  }
+  .pulse {
+    animation: pulse 2s infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.6; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <h1>WHSG-DRA Diagnostic Demo</h1>
+    <p>Weighted Hierarchical Skill-Graph Diagnostic and Recommendation Algorithm</p>
+    <p style="margin-top:8px; font-size:12px;">Mathematics in the Modern World — Pambayang Dalubhasaan ng Marilao</p>
+    <span class="badge">Research Demo Prototype</span>
+  </header>
+
+  <!-- Step 1: Select Student -->
+  <div class="panel">
+    <h2>Step 1: Select Student</h2>
+    <div class="student-selector">
+      <div class="student-btn active" onclick="selectStudent('juan', this)">👨‍🎓 Juan Dela Cruz</div>
+      <div class="student-btn" onclick="selectStudent('maria', this)">👩‍🎓 Maria Santos</div>
+      <div class="student-btn" onclick="selectStudent('pedro', this)">👨‍🎓 Pedro Reyes</div>
+      <div class="student-btn" onclick="selectStudent('random', this)">🎲 Random Student</div>
+    </div>
+    <button onclick="runDiagnostic()">🔬 Run WHSG-DRA Diagnostic</button>
+    <button class="secondary" onclick="resetDemo()">↺ Reset</button>
+  </div>
+
+  <!-- Results -->
+  <div id="results" class="hidden">
+
+    <!-- Step 2: Overall -->
+    <div class="panel">
+      <h2>Step 2: Overall Result</h2>
+      <div class="grid">
+        <div class="stat-card">
+          <div class="label">Total Score</div>
+          <div class="value" id="totalScore">—</div>
+        </div>
+        <div class="stat-card">
+          <div class="label">Course Proficiency</div>
+          <div class="value" id="courseProf">—</div>
+        </div>
+        <div class="stat-card">
+          <div class="label">Skills Assessed</div>
+          <div class="value" id="skillsAssessed">—</div>
+        </div>
+        <div class="stat-card">
+          <div class="label">Skills Needing Review</div>
+          <div class="value bad" id="skillsNeeding">—</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 3: Error Breakdown -->
+    <div class="panel">
+      <h2>Step 3: Error-Source Estimation</h2>
+      <p style="font-size:13px; color:#94a3b8; margin-bottom:12px;">
+        Each wrong answer is classified into one of three error dimensions:
+      </p>
+      <div class="error-bar" id="errorBar"></div>
+      <div style="display:flex; justify-content:space-between; font-size:12px; margin-top:8px;">
+        <span>🔴 Arithmetic (F) — w=0.30</span>
+        <span>🟡 Procedural (P) — w=0.40</span>
+        <span>🟣 Conceptual (C) — w=0.30</span>
+      </div>
+      <div id="errorSummary" style="margin-top:16px; font-size:14px; line-height:1.8;"></div>
+    </div>
+
+    <!-- Step 4: Skill Proficiency -->
+    <div class="panel">
+      <h2>Step 4: Skill-Level Proficiency</h2>
+      <div style="max-height:400px; overflow-y:auto;">
+        <table id="skillTable">
+          <thead>
+            <tr><th>Skill ID</th><th>Description</th><th>P_s</th><th>Band</th></tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Step 5: Module Roll-Up -->
+    <div class="panel">
+      <h2>Step 5: Module Roll-Up</h2>
+      <table id="moduleTable">
+        <thead>
+          <tr><th>Module</th><th>Skills</th><th>Avg Proficiency</th><th>Band</th></tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+
+    <!-- Step 6: Root Cause -->
+    <div class="panel">
+      <h2>Step 6: Root-Cause Ranking</h2>
+      <p style="font-size:13px; color:#94a3b8; margin-bottom:12px;">
+        Prerequisite influence: weaknesses in prerequisite skills that propagate to dependent skills.
+      </p>
+      <div id="rootCauseList"></div>
+    </div>
+
+    <!-- Step 7: Recommendations -->
+    <div class="panel">
+      <h2>Step 7: Ranked Recommendations</h2>
+      <div id="recList"></div>
+    </div>
+
+    <!-- Step 8: Peer Tutor Brief -->
+    <div class="panel">
+      <h2>Step 8: Peer Tutor Brief</h2>
+      <div class="brief" id="tutorBrief"></div>
+    </div>
+
+    <!-- Step 9: Reassessment -->
+    <div class="panel">
+      <h2>Step 9: Reassessment Simulation</h2>
+      <p style="font-size:13px; color:#94a3b8; margin-bottom:12px;">
+        After remediation, the student retakes the test. The system computes improvement (Δ).
+      </p>
+      <button onclick="runReassessment()">📈 Simulate Reassessment (After Tutoring)</button>
+      <div id="reassessmentResults" style="margin-top:16px;"></div>
+    </div>
+
+  </div>
+
+  <footer>
+    WHSG-DRA Research Demo • Algorithm: Weighted Hierarchical Skill-Graph Diagnostic and Recommendation
+  </footer>
+</div>
+
+<script>
+// ============================================================
+// DATA: Skills
+// ============================================================
+const skills = {
+  '1.1.1': { module: 1, name: 'Identify patterns in nature' },
+  '1.2.1': { module: 1, name: 'Generate Fibonacci terms' },
+  '1.3.1': { module: 1, name: 'Compute golden ratio' },
+  '1.3.2': { module: 1, name: 'Apply golden ratio' },
+  '2.1.1': { module: 2, name: 'Translate to math expressions' },
+  '2.2.1': { module: 2, name: 'Set notation' },
+  '2.2.2': { module: 2, name: 'Cardinality of sets' },
+  '2.2.3': { module: 2, name: 'Set operations' },
+  '2.2.4': { module: 2, name: 'Subsets' },
+  '2.4.1': { module: 2, name: 'Identify propositions' },
+  '2.4.5': { module: 2, name: 'Negation of quantifiers' },
+  '3.1.1': { module: 3, name: 'Predict next number' },
+  '3.1.2': { module: 3, name: 'Make conjectures' },
+  '3.1.3': { module: 3, name: 'Counterexamples' },
+  '3.3.1': { module: 3, name: "Polya's first step" },
+  '3.3.2': { module: 3, name: 'Solve word problems' },
+  '4.1.1': { module: 4, name: 'Define statistics' },
+  '4.1.2': { module: 4, name: 'Population vs sample' },
+  '4.2.1': { module: 4, name: 'Qualitative vs quantitative' },
+  '4.2.2': { module: 4, name: 'Discrete vs continuous' },
+  '4.2.3': { module: 4, name: 'Scales of measurement' },
+  '5.1.1': { module: 5, name: 'Mean of ungrouped data' },
+  '5.2.1': { module: 5, name: 'Median of ungrouped data' },
+  '5.3.1': { module: 5, name: 'Mode of ungrouped data' },
+  '5.4.1': { module: 5, name: 'Quartiles' },
+  '6.1.1': { module: 6, name: 'Range' },
+  '6.2.1': { module: 6, name: 'Mean absolute deviation' },
+  '6.3.1': { module: 6, name: 'Variance' },
+  '6.4.1': { module: 6, name: 'Sample standard deviation' },
+  '6.4.3': { module: 6, name: 'Interpret standard deviation' },
+  '7.1.1': { module: 7, name: 'Properties of normal curve' },
+  '7.2.1': { module: 7, name: 'Convert to z-score' },
+  '7.3.1': { module: 7, name: 'Area under normal curve' },
+  '8.1.1': { module: 8, name: 'Correlation basics' },
+  '8.1.2': { module: 8, name: 'Interpret correlation' },
+  '8.2.1': { module: 8, name: 'Compute Pearson r' },
+  '8.3.1': { module: 8, name: 'Regression equation' },
+  '8.3.2': { module: 8, name: 'Predict using regression' },
+  '9.1.1': { module: 9, name: "Hamilton's method" },
+  '9.2.1': { module: 9, name: 'Plurality method' },
+  '9.2.2': { module: 9, name: 'Borda count' },
+  '9.2.3': { module: 9, name: 'Plurality with elimination' },
+  '9.3.1': { module: 9, name: 'Weighted voting' },
+  '10.1.1': { module: 10, name: 'Graph basics' },
+  '10.2.1': { module: 10, name: 'Euler circuit' },
+  '10.2.2': { module: 10, name: 'Euler path' },
+  '10.4.1': { module: 10, name: 'Greedy algorithm' },
+  '10.5.2': { module: 10, name: "Euler's formula" },
+  '10.5.3': { module: 10, name: 'Graph coloring' }
+};
+
+// ============================================================
+// DATA: Items (with error dimensions per distractor)
+// ============================================================
+const items = [
+  { id:'1.1', skill:'1.1.2', correct:'B', F:['A','C'], P:['D'], C:[] },
+  { id:'1.2', skill:'1.2.1', correct:'D', F:['B'], P:['A'], C:['C'] },
+  { id:'1.3', skill:'1.1.1', correct:'B', F:['D'], P:['C'], C:['A'] },
+  { id:'1.4', skill:'1.2.1', correct:'C', F:['B'], P:['A'], C:['D'] },
+  { id:'1.5', skill:'1.3.1', correct:'B', F:['A'], P:['C'], C:['D'] },
+  { id:'1.6', skill:'1.1.2', correct:'B', F:['D'], P:['C'], C:['A'] },
+  { id:'1.7', skill:'1.2.1', correct:'C', F:[], P:[], C:['A','B','D'] },
+  { id:'1.8', skill:'1.1.1', correct:'A', F:['C'], P:['D'], C:['B'] },
+  { id:'1.9', skill:'1.3.2', correct:'B', F:['A'], P:['C'], C:['D'] },
+  { id:'1.10', skill:'1.1.1', correct:'B', F:['A'], P:['C'], C:['D'] },
+  { id:'2.1', skill:'2.1.1', correct:'B', F:['C'], P:['A'], C:['D'] },
+  { id:'2.2', skill:'2.1.1', correct:'B', F:['A'], P:['C'], C:['D'] },
+  { id:'2.3', skill:'2.2.1', correct:'B', F:['D'], P:['C'], C:['A'] },
+  { id:'2.4', skill:'2.2.1', correct:'A', F:['B'], P:['C'], C:['D'] },
+  { id:'2.5', skill:'2.2.3', correct:'B', F:['D'], P:['C'], C:['A'] },
+  { id:'2.6', skill:'2.2.3', correct:'C', F:['B'], P:['A'], C:['D'] },
+  { id:'2.7', skill:'2.2.4', correct:'C', F:['A'], P:['B'], C:['D'] },
+  { id:'2.8', skill:'2.2.2', correct:'C', F:['A'], P:['B'], C:['D'] },
+  { id:'2.9', skill:'2.4.1', correct:'B', F:['D'], P:['C'], C:['A'] },
+  { id:'2.10', skill:'2.4.5', correct:'B', F:['D'], P:['C'], C:['A'] },
+  { id:'3.1', skill:'3.1.1', correct:'C', F:['B'], P:['A'], C:['D'] },
+  { id:'3.2', skill:'3.1.1', correct:'C', F:['A'], P:['B'], C:['D'] },
+  { id:'3.3', skill:'3.1.3', correct:'A', F:['D'], P:['C'], C:['B'] },
+  { id:'3.4', skill:'3.1.1', correct:'B', F:['A'], P:['C'], C:['D'] },
+  { id:'3.5', skill:'3.3.1', correct:'C', F:['B'], P:['A'], C:['D'] },
+  { id:'3.6', skill:'3.1.1', correct:'C', F:['A'], P:['B'], C:['D'] },
+  { id:'3.7', skill:'3.1.2', correct:'B', F:['C'], P:['A'], C:['D'] },
+  { id:'3.8', skill:'3.3.2', correct:'C', F:['B'], P:['A'], C:['D'] },
+  { id:'3.9', skill:'3.1.1', correct:'C', F:['A'], P:['B'], C:['D'] },
+  { id:'3.10', skill:'3.3.2', correct:'A', F:['B'], P:['C'], C:['D'] },
+  { id:'4.1', skill:'4.1.1', correct:'B', F:['D'], P:['C'], C:['A'] },
+  { id:'4.2', skill:'4.1.2', correct:'B', F:['C'], P:['A'], C:['D'] },
+  { id:'4.3', skill:'4.2.1', correct:'C', F:['A'], P:['B'], C:['D'] },
+  { id:'4.4', skill:'4.2.2', correct:'C', F:['A'], P:['B'], C:['D'] },
+  { id:'4.5', skill:'4.2.3', correct:'A', F:['B'], P:['C'], C:['D'] },
+  { id:'4.6', skill:'4.2.3', correct:'B', F:['A'], P:['C'], C:['D'] },
+  { id:'4.7', skill:'4.2.3', correct:'D', F:['A'], P:['B'], C:['C'] },
+  { id:'4.8', skill:'4.1.2', correct:'B', F:['A'], P:['C'], C:['D'] },
+  { id:'4.9', skill:'4.2.2', correct:'C', F:['A','B'], P:[], C:['D'] },
+  { id:'4.10', skill:'4.2.3', correct:'C', F:['A'], P:['B'], C:['D'] },
+  { id:'5.1', skill:'5.1.1', correct:'B', F:['A'], P:['C'], C:['D'] },
+  { id:'5.2', skill:'5.2.1', correct:'B', F:['C'], P:['A'], C:['D'] },
+  { id:'5.3', skill:'5.3.1', correct:'C', F:['A'], P:['B'], C:['D'] },
+  { id:'5.4', skill:'5.1.1', correct:'C', F:['B'], P:['A'], C:['D'] },
+  { id:'5.5', skill:'5.2.1', correct:'B', F:['C'], P:['A'], C:['D'] },
+  { id:'5.6', skill:'5.3.1', correct:'D', F:['A'], P:['B'], C:['C'] },
+  { id:'5.7', skill:'5.4.1', correct:'C', F:['B'], P:['A'], C:['D'] },
+  { id:'5.8', skill:'5.1.1', correct:'C', F:['B'], P:['A'], C:['D'] },
+  { id:'5.9', skill:'5.1.1', correct:'A', F:['B'], P:['C'], C:['D'] },
+  { id:'5.10', skill:'5.2.1', correct:'B', F:['C'], P:['A'], C:['D'] },
+  { id:'6.1', skill:'6.1.1', correct:'C', F:['A'], P:['B'], C:['D'] },
+  { id:'6.2', skill:'6.1.1', correct:'B', F:['A'], P:['C'], C:['D'] },
+  { id:'6.3', skill:'6.1.1', correct:'C', F:['A'], P:['B'], C:['D'] },
+  { id:'6.4', skill:'6.1.1', correct:'B', F:['A'], P:['C'], C:['D'] },
+  { id:'6.5', skill:'6.4.3', correct:'B', F:['A'], P:['C'], C:['D'] },
+  { id:'6.6', skill:'6.4.1', correct:'A', F:['B'], P:['C'], C:['D'] },
+  { id:'6.7', skill:'6.1.1', correct:'B', F:['A'], P:['C'], C:['D'] },
+  { id:'6.8', skill:'6.1.1', correct:'A', F:['D'], P:['C'], C:['B'] },
+  { id:'6.9', skill:'6.3.1', correct:'C', F:['A'], P:['B'], C:['D'] },
+  { id:'6.10', skill:'6.2.1', correct:'C', F:['A','B'], P:[], C:['D'] },
+  { id:'7.1', skill:'7.1.1', correct:'C', F:['A'], P:['B'], C:['D'] },
+  { id:'7.2', skill:'7.1.1', correct:'B', F:['A'], P:['C'], C:['D'] },
+  { id:'7.3', skill:'7.2.1', correct:'B', F:['A'], P:['C'], C:['D'] },
+  { id:'7.4', skill:'7.2.1', correct:'B', F:['C'], P:['D'], C:['A'] },
+  { id:'7.5', skill:'7.1.1', correct:'C', F:['A'], P:['B'], C:['D'] },
+  { id:'7.6', skill:'7.1.1', correct:'C', F:['A'], P:['B'], C:['D'] },
+  { id:'7.7', skill:'7.2.1', correct:'B', F:['C'], P:['D'], C:['A'] },
+  { id:'7.8', skill:'7.2.1', correct:'C', F:['A'], P:['B'], C:['D'] },
+  { id:'7.9', skill:'7.2.1', correct:'A', F:['C'], P:['D'], C:['B'] },
+  { id:'7.10', skill:'7.1.1', correct:'B', F:['A'], P:['C'], C:['D'] },
+  { id:'8.1', skill:'8.1.2', correct:'B', F:['D'], P:['C'], C:['A'] },
+  { id:'8.2', skill:'8.1.2', correct:'C', F:['A'], P:['B'], C:['D'] },
+  { id:'8.3', skill:'8.1.1', correct:'C', F:['A'], P:['B'], C:['D'] },
+  { id:'8.4', skill:'8.1.2', correct:'C', F:['A'], P:['B'], C:['D'] },
+  { id:'8.5', skill:'8.1.2', correct:'B', F:['D'], P:['C'], C:['A'] },
+  { id:'8.6', skill:'8.3.1', correct:'B', F:['A'], P:['C'], C:['D'] },
+  { id:'8.7', skill:'8.3.1', correct:'C', F:['A'], P:['B'], C:['D'] },
+  { id:'8.8', skill:'8.3.2', correct:'B', F:['C'], P:['A'], C:['D'] },
+  { id:'8.9', skill:'8.1.2', correct:'B', F:['D'], P:['C'], C:['A'] },
+  { id:'8.10', skill:'8.3.2', correct:'B', F:['C'], P:['A'], C:['D'] },
+  { id:'9.1', skill:'9.1.1', correct:'B', F:['C'], P:['A'], C:['D'] },
+  { id:'9.2', skill:'9.1.1', correct:'B', F:['A'], P:['C'], C:['D'] },
+  { id:'9.3', skill:'9.2.1', correct:'B', F:['D'], P:['C'], C:['A'] },
+  { id:'9.4', skill:'9.2.2', correct:'D', F:['A'], P:['B'], C:['C'] },
+  { id:'9.5', skill:'9.2.2', correct:'B', F:['A'], P:['C'], C:['D'] },
+  { id:'9.6', skill:'9.2.3', correct:'C', F:['A'], P:['B'], C:['D'] },
+  { id:'9.7', skill:'9.3.1', correct:'C', F:['A'], P:['B'], C:['D'] },
+  { id:'9.8', skill:'9.3.1', correct:'A', F:['C'], P:['B'], C:['D'] },
+  { id:'9.9', skill:'9.3.1', correct:'B', F:['A'], P:['C'], C:['D'] },
+  { id:'9.10', skill:'9.3.1', correct:'C', F:['A'], P:['B'], C:['D'] },
+  { id:'10.1', skill:'10.1.1', correct:'B', F:['A'], P:['C'], C:['D'] },
+  { id:'10.2', skill:'10.1.1', correct:'B', F:['A'], P:['C'], C:['D'] },
+  { id:'10.3', skill:'10.2.1', correct:'B', F:['D'], P:['C'], C:['A'] },
+  { id:'10.4', skill:'10.2.2', correct:'B', F:['D'], P:['C'], C:['A'] },
+  { id:'10.5', skill:'10.1.1', correct:'C', F:['A'], P:['B'], C:['D'] },
+  { id:'10.6', skill:'10.5.2', correct:'C', F:['A'], P:['B'], C:['D'] },
+  { id:'10.7', skill:'10.5.2', correct:'B', F:['A'], P:['C'], C:['D'] },
+  { id:'10.8', skill:'10.5.3', correct:'C', F:['A'], P:['B'], C:['D'] },
+  { id:'10.9', skill:'10.4.1', correct:'B', F:['D'], P:['C'], C:['A'] },
+  { id:'10.10', skill:'10.5.3', correct:'B', F:['A'], P:['C'], C:['D'] }
+];
+
+// ============================================================
+// DATA: Students (their answer sheets)
+// ============================================================
+const students = {
+  juan: {
+    name: 'Juan Dela Cruz',
+    answers: {
+      '1.1':'B','1.2':'D','1.3':'B','1.4':'C','1.5':'B',
+      '1.6':'B','1.7':'C','1.8':'A','1.9':'B','1.10':'B',
+      '2.1':'B','2.2':'B','2.3':'B','2.4':'C','2.5':'B',
+      '2.6':'C','2.7':'C','2.8':'C','2.9':'B','2.10':'A',
+      '3.1':'C','3.2':'C','3.3':'A','3.4':'B','3.5':'C',
+      '3.6':'C','3.7':'B','3.8':'B','3.9':'C','3.10':'A',
+      '4.1':'B','4.2':'B','4.3':'C','4.4':'C','4.5':'A',
+      '4.6':'B','4.7':'A','4.8':'B','4.9':'C','4.10':'B',
+      '5.1':'B','5.2':'B','5.3':'C','5.4':'B','5.5':'B',
+      '5.6':'D','5.7':'B','5.8':'B','5.9':'A','5.10':'B',
+      '6.1':'C','6.2':'B','6.3':'C','6.4':'B','6.5':'B',
+      '6.6':'B','6.7':'B','6.8':'A','6.9':'B','6.10':'C',
+      '7.1':'C','7.2':'B','7.3':'C','7.4':'B','7.5':'C',
+      '7.6':'C','7.7':'A','7.8':'C','7.9':'A','7.10':'B',
+      '8.1':'B','8.2':'C','8.3':'C','8.4':'C','8.5':'B',
+      '8.6':'B','8.7':'C','8.8':'C','8.9':'B','8.10':'B',
+      '9.1':'B','9.2':'B','9.3':'B','9.4':'B','9.5':'A',
+      '9.6':'C','9.7':'C','9.8':'A','9.9':'B','9.10':'C',
+      '10.1':'B','10.2':'B','10.3':'A','10.4':'B','10.5':'C',
+      '10.6':'C','10.7':'B','10.8':'C','10.9':'B','10.10':'B'
+    }
+  },
+  maria: {
+    name: 'Maria Santos',
+    answers: {
+      '1.1':'B','1.2':'D','1.3':'B','1.4':'C','1.5':'B',
+      '1.6':'B','1.7':'C','1.8':'A','1.9':'B','1.10':'B',
+      '2.1':'B','2.2':'B','2.3':'B','2.4':'A','2.5':'B',
+      '2.6':'C','2.7':'C','2.8':'C','2.9':'B','2.10':'B',
+      '3.1':'C','3.2':'C','3.3':'A','3.4':'B','3.5':'C',
+      '3.6':'C','3.7':'B','3.8':'C','3.9':'C','3.10':'A',
+      '4.1':'B','4.2':'B','4.3':'C','4.4':'C','4.5':'A',
+      '4.6':'B','4.7':'D','4.8':'B','4.9':'C','4.10':'C',
+      '5.1':'B','5.2':'B','5.3':'C','5.4':'C','5.5':'B',
+      '5.6':'D','5.7':'C','5.8':'C','5.9':'A','5.10':'B',
+      '6.1':'C','6.2':'B','6.3':'C','6.4':'B','6.5':'B',
+      '6.6':'A','6.7':'B','6.8':'A','6.9':'C','6.10':'C',
+      '7.1':'C','7.2':'B','7.3':'B','7.4':'B','7.5':'C',
+      '7.6':'C','7.7':'B','7.8':'C','7.9':'A','7.10':'B',
+      '8.1':'B','8.2':'C','8.3':'C','8.4':'C','8.5':'B',
+      '8.6':'B','8.7':'C','8.8':'B','8.9':'B','8.10':'B',
+      '9.1':'B','9.2':'B','9.3':'B','9.4':'D','9.5':'B',
+      '9.6':'C','9.7':'C','9.8':'A','9.9':'B','9.10':'C',
+      '10.1':'B','10.2':'B','10.3':'B','10.4':'B','10.5':'C',
+      '10.6':'C','10.7':'B','10.8':'C','10.9':'B','10.10':'B'
+    }
+  },
+  pedro: {
+    name: 'Pedro Reyes',
+    answers: {
+      '1.1':'B','1.2':'D','1.3':'B','1.4':'C','1.5':'B',
+      '1.6':'B','1.7':'C','1.8':'A','1.9':'B','1.10':'B',
+      '2.1':'B','2.2':'C','2.3':'B','2.4':'A','2.5':'B',
+      '2.6':'C','2.7':'A','2.8':'C','2.9':'B','2.10':'B',
+      '3.1':'C','3.2':'A','3.3':'A','3.4':'B','3.5':'C',
+      '3.6':'C','3.7':'B','3.8':'C','3.9':'C','3.10':'A',
+      '4.1':'B','4.2':'B','4.3':'C','4.4':'C','4.5':'A',
+      '4.6':'B','4.7':'D','4.8':'B','4.9':'C','4.10':'C',
+      '5.1':'B','5.2':'B','5.3':'C','5.4':'C','5.5':'B',
+      '5.6':'D','5.7':'C','5.8':'C','5.9':'A','5.10':'B',
+      '6.1':'C','6.2':'B','6.3':'C','6.4':'B','6.5':'B',
+      '6.6':'A','6.7':'B','6.8':'A','6.9':'C','6.10':'C',
+      '7.1':'C','7.2':'B','7.3':'B','7.4':'B','7.5':'C',
+      '7.6':'C','7.7':'B','7.8':'C','7.9':'A','7.10':'B',
+      '8.1':'B','8.2':'C','8.3':'C','8.4':'C','8.5':'B',
+      '8.6':'B','8.7':'C','8.8':'B','8.9':'B','8.10':'B',
+      '9.1':'B','9.2':'B','9.3':'B','9.4':'D','9.5':'B',
+      '9.6':'C','9.7':'C','9.8':'A','9.9':'B','9.10':'C',
+      '10.1':'B','10.2':'B','10.3':'B','10.4':'B','10.5':'C',
+      '10.6':'C','10.7':'B','10.8':'C','10.9':'B','10.10':'B'
+    }
+  }
+};
+
+// ============================================================
+// DATA: Prerequisite Graph
+// ============================================================
+const prereqs = {
+  '5.1.2': ['5.1.1'],
+  '6.3.1': ['5.1.1'],
+  '6.4.1': ['6.3.1'],
+  '7.3.1': ['7.2.1'],
+  '8.2.1': ['8.1.1'],
+  '8.3.1': ['8.2.1'],
+  '9.1.4': ['9.1.1'],
+  '10.2.1': ['10.1.1'],
+  '10.3.1': ['10.1.1'],
+  '10.4.2': ['10.4.1']
+};
+
+// ============================================================
+// DATA: Learning Resources
+// ============================================================
+const resources = [
+  { id:'R-M01-001', title:'Patterns in Nature (Video)', type:'Video', skills:{'1.1.1':1.0, '1.1.2':0.8} },
+  { id:'R-M01-002', title:'Fibonacci Sequence Tutorial', type:'PDF', skills:{'1.2.1':1.0, '1.3.1':0.7} },
+  { id:'R-M02-001', title:'Math Language Basics', type:'Video', skills:{'2.1.1':1.0} },
+  { id:'R-M02-002', title:'Sets and Operations', type:'PDF', skills:{'2.2.1':1.0, '2.2.2':1.0, '2.2.3':1.0, '2.2.4':0.8} },
+  { id:'R-M02-003', title:'Logic and Propositions', type:'Video', skills:{'2.4.1':1.0, '2.4.5':1.0} },
+  { id:'R-M03-001', title:'Inductive vs Deductive', type:'Video', skills:{'3.1.1':1.0, '3.1.2':1.0, '3.1.3':0.9} },
+  { id:'R-M03-002', title:"Polya's Problem Solving", type:'PDF', skills:{'3.3.1':1.0, '3.3.2':1.0} },
+  { id:'R-M04-001', title:'Types of Data', type:'PDF', skills:{'4.2.1':1.0, '4.2.2':1.0, '4.2.3':1.0} },
+  { id:'R-M05-001', title:'Mean, Median, Mode', type:'Video', skills:{'5.1.1':1.0, '5.2.1':1.0, '5.3.1':1.0} },
+  { id:'R-M05-002', title:'Quartiles, Deciles, Percentiles', type:'PDF', skills:{'5.4.1':1.0} },
+  { id:'R-M06-001', title:'Range and MAD', type:'Video', skills:{'6.1.1':1.0, '6.2.1':1.0} },
+  { id:'R-M06-002', title:'Variance and Standard Deviation', type:'Video', skills:{'6.3.1':1.0, '6.4.1':1.0, '6.4.3':0.8} },
+  { id:'R-M07-001', title:'Normal Distribution Basics', type:'Video', skills:{'7.1.1':1.0} },
+  { id:'R-M07-002', title:'z-Scores and Standardization', type:'Video', skills:{'7.2.1':1.0} },
+  { id:'R-M07-003', title:'Area Under Normal Curve', type:'PDF', skills:{'7.3.1':1.0} },
+  { id:'R-M08-001', title:'Correlation Basics', type:'Video', skills:{'8.1.1':1.0, '8.1.2':1.0} },
+  { id:'R-M08-002', title:'Pearson r Computation', type:'PDF', skills:{'8.2.1':1.0} },
+  { id:'R-M08-003', title:'Linear Regression', type:'Video', skills:{'8.3.1':1.0, '8.3.2':1.0} },
+  { id:'R-M09-001', title:'Apportionment Methods', type:'PDF', skills:{'9.1.1':1.0} },
+  { id:'R-M09-002', title:'Voting Methods', type:'Video', skills:{'9.2.1':1.0, '9.2.2':1.0, '9.2.3':1.0} },
+  { id:'R-M09-003', title:'Weighted Voting', type:'PDF', skills:{'9.3.1':1.0} },
+  { id:'R-M10-001', title:'Euler Circuits and Paths', type:'Video', skills:{'10.2.1':1.0, '10.2.2':1.0} },
+  { id:'R-M10-002', title:'Weighted Graphs', type:'PDF', skills:{'10.4.1':1.0} },
+  { id:'R-M10-003', title:'Planar Graphs and Euler Formula', type:'Video', skills:{'10.5.2':1.0, '10.5.3':1.0} }
+];
+
+// ============================================================
+// ALGORITHM: WHSG-DRA
+// ============================================================
+let currentStudent = 'juan';
+let currentResults = null;
+
+function selectStudent(id, el) {
+  document.querySelectorAll('.student-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  currentStudent = id;
+  document.getElementById('results').classList.add('hidden');
+}
+
+function resetDemo() {
+  document.getElementById('results').classList.add('hidden');
+  currentResults = null;
+}
+
+function runDiagnostic() {
+  let answers;
+  if (currentStudent === 'random') {
+    answers = {};
+    items.forEach(item => {
+      const opts = ['A','B','C','D'];
+      answers[item.id] = opts[Math.floor(Math.random() * 4)];
+    });
+  } else {
+    answers = students[currentStudent].answers;
+  }
+
+  // Step 1: Classify each response
+  const classifications = [];
+  let correctCount = 0;
+  const errorCounts = { F: 0, P: 0, C: 0 };
+
+  items.forEach(item => {
+    const studentAns = answers[item.id];
+    const isCorrect = studentAns === item.correct;
+    if (isCorrect) {
+      correctCount++;
+      classifications.push({ item: item.id, skill: item.skill, correct: true, dimension: null, weight: 1/3 });
+    } else {
+      let dim = null;
+      if (item.F.includes(studentAns)) dim = 'F';
+      else if (item.P.includes(studentAns)) dim = 'P';
+      else if (item.C.includes(studentAns)) dim = 'C';
+      else dim = 'U'; // Unclassified
+      if (dim !== 'U') errorCounts[dim]++;
+      classifications.push({ item: item.id, skill: item.skill, correct: false, dimension: dim, weight: dim === 'F' ? 0.30 : dim === 'P' ? 0.40 : dim === 'C' ? 0.30 : 0.30 });
+    }
+  });
+
+  // Step 2: Skill proficiency
+  const skillProf = {};
+  Object.keys(skills).forEach(skillId => {
+    const skillItems = classifications.filter(c => c.skill === skillId);
+    if (skillItems.length === 0) return;
+    let sumW = 0, sumWC = 0;
+    skillItems.forEach(c => {
+      sumW += c.weight;
+      if (c.correct) sumWC += c.weight;
+    });
+    skillProf[skillId] = sumW > 0 ? (100 * sumWC / sumW) : 0;
+  });
+
+  // Step 3: Module roll-up
+  const moduleProf = {};
+  Object.keys(skills).forEach(skillId => {
+    if (skillProf[skillId] === undefined) return;
+    const m = skills[skillId].module;
+    if (!moduleProf[m]) moduleProf[m] = { total: 0, count: 0 };
+    moduleProf[m].total += skillProf[skillId];
+    moduleProf[m].count++;
+  });
+  const moduleAvg = {};
+  Object.keys(moduleProf).forEach(m => {
+    moduleAvg[m] = moduleProf[m].total / moduleProf[m].count;
+  });
+
+  // Step 4: Course proficiency
+  const moduleValues = Object.values(moduleAvg);
+  const courseProf = moduleValues.length > 0 ? moduleValues.reduce((a,b) => a+b, 0) / moduleValues.length : 0;
+
+  // Step 5: Root cause
+  const rootCauses = [];
+  Object.keys(prereqs).forEach(skillId => {
+    if (skillProf[skillId] === undefined) return;
+    prereqs[skillId].forEach(prereqId => {
+      if (skillProf[prereqId] === undefined) return;
+      const influence = (100 - skillProf[prereqId]) * 0.5 + (100 - skillProf[skillId]) * 0.5;
+      if (influence > 20) {
+        rootCauses.push({
+          skill: skillId,
+          prereq: prereqId,
+          influence: influence,
+          prereqProf: skillProf[prereqId],
+          skillProf: skillProf[skillId]
+        });
+      }
+    });
+  });
+  rootCauses.sort((a,b) => b.influence - a.influence);
+
+  // Step 6: Recommendations (cosine similarity)
+  const needVector = {};
+  Object.keys(skillProf).forEach(skillId => {
+    if (skillProf[skillId] < 80) {
+      needVector[skillId] = 100 - skillProf[skillId];
+    }
+  });
+
+  const recs = resources.map(res => {
+    let dotProduct = 0;
+    let needMag = 0;
+    let resMag = 0;
+    Object.keys(needVector).forEach(skillId => {
+      needMag += needVector[skillId] ** 2;
+      const coverage = res.skills[skillId] || 0;
+      resMag += coverage ** 2;
+      dotProduct += needVector[skillId] * coverage;
+    });
+    const similarity = (needMag > 0 && resMag > 0) ? dotProduct / (Math.sqrt(needMag) * Math.sqrt(resMag)) : 0;
+    return { ...res, score: similarity };
+  }).filter(r => r.score > 0).sort((a,b) => b.score - a.score);
+
+  // Step 7: Tutor brief
+  const weakSkills = Object.keys(skillProf)
+    .filter(s => skillProf[s] < 60)
+    .sort((a,b) => skillProf[a] - skillProf[b]);
+
+  const dominantError = Object.entries(errorCounts).sort((a,b) => b[1] - a[1])[0];
+
+  // Save results
+  currentResults = {
+    answers, classifications, correctCount, errorCounts,
+    skillProf, moduleAvg, courseProf, rootCauses, recs,
+    weakSkills, dominantError
+  };
+
+  renderResults();
+  document.getElementById('results').classList.remove('hidden');
+  document.getElementById('results').scrollIntoView({ behavior: 'smooth' });
+}
+
+function getBand(p) {
+  if (p >= 80) return { label: 'Mastered', cls: 'mastered' };
+  if (p >= 60) return { label: 'Developing', cls: 'developing' };
+  return { label: 'Needs Review', cls: 'needs' };
+}
+
+function renderResults() {
+  const r = currentResults;
+  const studentName = currentStudent === 'random' ? 'Random Student' : students[currentStudent].name;
+
+  // Overall
+  document.getElementById('totalScore').textContent = `${r.correctCount}/100 (${r.correctCount}%)`;
+  const cpEl = document.getElementById('courseProf');
+  cpEl.textContent = `${r.courseProf.toFixed(1)}%`;
+  cpEl.className = 'value ' + (r.courseProf >= 80 ? 'good' : r.courseProf >= 60 ? 'warn' : 'bad');
+  document.getElementById('skillsAssessed').textContent = Object.keys(r.skillProf).length;
+  document.getElementById('skillsNeeding').textContent = r.weakSkills.length;
+
+  // Error bar
+  const totalErr = r.errorCounts.F + r.errorCounts.P + r.errorCounts.C;
+  const fPct = totalErr > 0 ? (r.errorCounts.F / totalErr * 100) : 0;
+  const pPct = totalErr > 0 ? (r.errorCounts.P / totalErr * 100) : 0;
+  const cPct = totalErr > 0 ? (r.errorCounts.C / totalErr * 100) : 0;
+  document.getElementById('errorBar').innerHTML = `
+    <div class="error-f" style="width:${fPct}%">${fPct > 8 ? fPct.toFixed(0)+'%' : ''}</div>
+    <div class="error-p" style="width:${pPct}%">${pPct > 8 ? pPct.toFixed(0)+'%' : ''}</div>
+    <div class="error-c" style="width:${cPct}%">${cPct > 8 ? cPct.toFixed(0)+'%' : ''}</div>
+  `;
+
+  const dominant = r.dominantError;
+  const dominantLabel = dominant[0] === 'F' ? 'ARITHMETIC' : dominant[0] === 'P' ? 'PROCEDURAL' : 'CONCEPTUAL';
+  document.getElementById('errorSummary').innerHTML = `
+    <strong>Dominant Error: ${dominantLabel} (${dominant[1]} errors)</strong><br>
+    <span style="color:#94a3b8;">Juan's errors are not random — they cluster around a specific pattern.</span>
+  `;
+
+  // Skill table
+  const skillTbody = document.querySelector('#skillTable tbody');
+  skillTbody.innerHTML = '';
+  Object.keys(r.skillProf).sort().forEach(skillId => {
+    const p = r.skillProf[skillId];
+    const band = getBand(p);
+    skillTbody.innerHTML += `
+      <tr>
+        <td><strong>${skillId}</strong></td>
+        <td>${skills[skillId].name}</td>
+        <td>${p.toFixed(1)}%</td>
+        <td><span class="band ${band.cls}">${band.label}</span></td>
+      </tr>
+    `;
+  });
+
+  // Module table
+  const moduleTbody = document.querySelector('#moduleTable tbody');
+  moduleTbody.innerHTML = '';
+  Object.keys(r.moduleAvg).sort((a,b) => a-b).forEach(m => {
+    const p = r.moduleAvg[m];
+    const band = getBand(p);
+    const moduleNames = {
+      1:'Nature of Mathematics', 2:'Math Language & Symbols', 3:'Problem Solving & Reasoning',
+      4:'Data Management', 5:'Measures of Central Tendency', 6:'Measures of Variability',
+      7:'Normal Probability Distribution', 8:'Correlation & Linear Regression',
+      9:'Apportionment and Voting', 10:'Mathematics of Graphs'
+    };
+    moduleTbody.innerHTML += `
+      <tr>
+        <td>Module ${m}: ${moduleNames[m]}</td>
+        <td>${Object.keys(skills).filter(s => skills[s].module == m).length}</td>
+        <td><strong>${p.toFixed(1)}%</strong></td>
+        <td><span class="band ${band.cls}">${band.label}</span></td>
+      </tr>
+    `;
+  });
+
+  // Root causes
+  const rcList = document.getElementById('rootCauseList');
+  if (r.rootCauses.length === 0) {
+    rcList.innerHTML = '<p style="color:#10b981;">✓ No significant root-cause issues detected.</p>';
+  } else {
+    rcList.innerHTML = r.rootCauses.slice(0, 5).map((rc, i) => `
+      <div class="rec-item">
+        <div class="rank">RANK ${i+1} — Influence Score: ${rc.influence.toFixed(1)}</div>
+        <div class="title">${skills[rc.prereq].name} (${rc.prereqProf.toFixed(1)}%) → affects → ${skills[rc.skill].name} (${rc.skillProf.toFixed(1)}%)</div>
+        <div class="desc">Weak prerequisite is limiting the dependent skill.</div>
+      </div>
+    `).join('');
+  }
+
+  // Recommendations
+  const recList = document.getElementById('recList');
+  recList.innerHTML = r.recs.slice(0, 6).map((rec, i) => `
+    <div class="rec-item">
+      <div class="rank">PRIORITY ${i+1} — Relevance: ${(rec.score * 100).toFixed(0)}%</div>
+      <div class="title">${rec.title} <span style="color:#94a3b8;font-size:11px;">(${rec.type})</span></div>
+      <div class="desc">ID: ${rec.id} • Covers: ${Object.keys(rec.skills).join(', ')}</div>
+    </div>
+  `).join('');
+
+  // Tutor brief
+  const briefTop = r.weakSkills.slice(0, 3).map(s => `  • ${skills[s].name} (${r.skillProf[s].toFixed(1)}%)`).join('\n');
+  const dominantLabel2 = dominant[0] === 'F' ? 'Arithmetic' : dominant[0] === 'P' ? 'Procedural' : 'Conceptual';
+  const approach = dominant[0] === 'P'
+    ? 'Walk through each step of the formula. Use color-coding to separate steps.'
+    : dominant[0] === 'F'
+    ? 'Focus on arithmetic accuracy. Use drills and check each calculation.'
+    : 'Review the concept behind the formula. Use visual explanations and analogies.';
+  document.getElementById('tutorBrief').textContent = `
+============================================================
+  PEER TUTOR BRIEF — WHSG-DRA
+  Student: ${studentName}
+============================================================
+
+FOCUS SKILLS (Priority 1-3):
+${briefTop}
+
+DOMINANT ERROR TYPE: ${dominantLabel2} (${dominant[1]} errors)
+
+SUGGESTED APPROACH:
+  ${approach}
+
+PREREQUISITE CHECK:
+${r.rootCauses.length > 0 ? '  ⚠ Verify mastery of: ' + r.rootCauses.slice(0,2).map(rc => skills[rc.prereq].name).join(', ') : '  ✓ No prerequisite gaps detected.'}
+
+RECOMMENDED RESOURCES:
+${r.recs.slice(0,3).map((rec, i) => `  ${i+1}. ${rec.title} (${rec.id})`).join('\n')}
+
+SESSION PLAN:
+  1. Review prerequisite skill (if any)
+  2. Walk through the target formula step-by-step
+  3. Guided practice (3 problems)
+  4. Independent practice (2 problems)
+  5. Assign the top-ranked resource for homework
+
+============================================================
+  `;
+}
+
+function runReassessment() {
+  if (!currentResults) return;
+  const r = currentResults;
+
+  // Simulate improvement: each weak skill improves by 30-50%
+  const newSkillProf = { ...r.skillProf };
+  r.weakSkills.forEach(skillId => {
+    const improvement = 30 + Math.random() * 25; // 30-55% improvement
+    newSkillProf[skillId] = Math.min(100, r.skillProf[skillId] + improvement);
+  });
+
+  const targetSkills = ['6.3.1', '6.4.1', '5.1.1', '7.2.1', '5.4.1', '9.2.2', '10.2.1'];
+  let html = '<table><thead><tr><th>Skill</th><th>Old P</th><th>New P</th><th>Δ</th><th>Band Change</th></tr></thead><tbody>';
+  targetSkills.forEach(skillId => {
+    if (r.skillProf[skillId] === undefined) return;
+    const oldP = r.skillProf[skillId];
+    const newP = newSkillProf[skillId];
+    const delta = newP - oldP;
+    const oldBand = getBand(oldP);
+    const newBand = getBand(newP);
+    const bandChange = oldBand.label !== newBand.label ? `${oldBand.label} → ${newBand.label}` : '—';
+    html += `
+      <tr>
+        <td>${skillId} — ${skills[skillId].name}</td>
+        <td>${oldP.toFixed(1)}%</td>
+        <td>${newP.toFixed(1)}%</td>
+        <td style="color:${delta > 0 ? '#10b981' : '#ef4444'};"><strong>${delta > 0 ? '+' : ''}${delta.toFixed(1)}%</strong></td>
+        <td>${bandChange}</td>
+      </tr>
+    `;
+  });
+  html += '</tbody></table>';
+
+  const newCourseProf = Object.values(newSkillProf).reduce((a,b) => a+b, 0) / Object.keys(newSkillProf).length;
+  html += `
+    <div style="margin-top:16px; padding:16px; background:#0f172a; border-radius:8px;">
+      <div style="font-size:12px; color:#94a3b8;">NEW COURSE PROFICIENCY</div>
+      <div style="font-size:28px; font-weight:700; color:#10b981;">${newCourseProf.toFixed(1)}%</div>
+      <div style="font-size:12px; color:#94a3b8; margin-top:4px;">Old: ${r.courseProf.toFixed(1)}% → Δ = +${(newCourseProf - r.courseProf).toFixed(1)}%</div>
+    </div>
+  `;
+
+  document.getElementById('reassessmentResults').innerHTML = html;
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,1724 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>SkillBridge · MMW Quest</title>
+<script>
+(function () {
+  try {
+    var t = localStorage.getItem('sb_theme');
+    if (t !== 'light' && t !== 'dark') {
+      t = (window.matchMedia && window.matchMedia('(prefers-color-scheme:dark)').matches) ? 'dark' : 'light';
+    }
+    document.documentElement.dataset.theme = t;
+  } catch (e) { document.documentElement.dataset.theme = 'light'; }
+})();
+</script>
+<style>
+[hidden]{display:none!important}
+:root, [data-theme="light"]{
+  --ink:#1d2b53;--paper:#fff;--sky1:#7fd3ff;--sky2:#cdf3ff;
+  --gold:#ffb703;--gold2:#fb8500;--green:#2ec27e;--red:#ef476f;
+  --blue:#118ab2;--purple:#8e6cf0;--mut:#4b5a7a;--line:#1d2b53;
+  color-scheme:light;box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+}
+[data-theme="dark"]{
+  --ink:#f2f6ff;--paper:#1b2748;--sky1:#14204a;--sky2:#23325e;
+  --gold:#ffc94d;--gold2:#ff9e3d;--green:#4dd9a3;--red:#ff7a95;
+  --blue:#5fc7ea;--purple:#b8a4ff;--mut:#b9c6e6;--line:#0b1230;
+  color-scheme:dark;
+}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;min-height:100vh;color:var(--ink);font:16px/1.45 "Trebuchet MS","Segoe UI",system-ui,sans-serif;background:url('/static/bg-lightmode.png') center/cover no-repeat fixed}
+[data-theme="dark"] body{background:url('/static/bg-darkmode.png') center/cover no-repeat fixed}
+
+main{max-width:880px;margin:0 auto;padding:14px}
+h1,h2,h3{font-family:"Arial Black","Trebuchet MS",sans-serif;letter-spacing:.2px;margin:0 0 8px}
+h2{font-size:20px}
+.mut{color:var(--mut);font-size:14px}
+.panel{background:var(--paper);border:4px solid var(--line);border-radius:20px;box-shadow:0 7px 0 var(--line);padding:18px;margin:14px 0}
+button{font:700 15px "Trebuchet MS",system-ui,sans-serif;color:var(--ink);background:var(--gold);border:3px solid var(--line);border-radius:14px;padding:10px 16px;box-shadow:0 4px 0 var(--line);cursor:pointer;margin:4px}
+button:active{transform:translateY(3px);box-shadow:0 1px 0 var(--line)}
+button:disabled{opacity:.5;cursor:default;transform:none}
+button.cta{background:var(--green);color:#fff;font-size:17px}
+button.g{background:var(--paper)}
+button.blue{background:var(--blue);color:#fff}
+input{display:block;width:100%;box-sizing:border-box;margin-top:4px;padding:10px;border-radius:12px;border:3px solid var(--line);background:var(--paper);color:var(--ink);font:16px system-ui}
+label{display:block;margin-top:10px;font-weight:700;font-size:14px}
+.err{color:var(--red);font-weight:700;min-height:1.2em;margin:6px 0}
+.msg{background:var(--gold);color:var(--ink);border:3px solid var(--line);border-radius:14px;padding:8px 12px;font-weight:700;margin:12px 0}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.rowb{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;align-items:center}
+.hud{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.xp{flex:1;min-width:160px;height:20px;background:var(--paper);border:3px solid var(--line);border-radius:99px;overflow:hidden}
+.xp i{display:block;height:100%;background:linear-gradient(90deg,var(--gold),var(--green));transition:width .5s}
+.tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin-top:10px}
+.tile{display:flex;flex-direction:column;align-items:center;gap:2px;background:var(--paper);border:3px solid var(--line);border-radius:16px;box-shadow:0 5px 0 var(--line);padding:10px 6px;margin:0;font-weight:700;transition:filter .2s, opacity .2s;position:relative}
+.tile .mon{font-size:36px;line-height:1.1;display:grid;place-items:center;width:56px;height:56px}
+.tile .mon img{width:56px;height:56px;object-fit:contain;display:block}
+.tile small{color:var(--mut);font-size:12px;font-weight:700}
+.tile em{font-style:normal;font-size:12px;font-weight:900;border-radius:99px;padding:3px 12px;border:2px solid var(--line);background:var(--green);color:#fff}
+.tile.cleared em{background:var(--green);color:#fff}
+.tile.ready em{background:var(--gold);color:var(--ink)}
+.tile.retested em{background:var(--purple);color:#fff}
+.tile.now{background:#ffe9a8}
+.tile.locked{opacity:.55;filter:grayscale(.55);cursor:not-allowed;box-shadow:0 5px 0 rgba(0,0,0,.25)}
+.tile.locked:hover{transform:none}
+.tile.locked em{background:#6b7280;color:#fff}
+[data-theme="dark"] .tile.now{background:#3a2e15}
+[data-theme="dark"] .tile.ready em{color:#0b1230}
+.tile .ring{position:absolute;top:6px;right:6px;pointer-events:none}
+
+.arena{color:#1d2b53;background:linear-gradient(180deg,#eef9ff,#ffffff)}
+.arena .mut{color:#34415f}
+[data-theme="dark"] .arena{color:#e6ebf3;background:linear-gradient(180deg,#1a2744,#0f1a30)}
+[data-theme="dark"] .arena .mut{color:#a8b6d3}
+
+.mon-big{font-size:86px;text-align:center;line-height:1.1;margin:4px 0;animation:bob 2s ease-in-out infinite;display:grid;place-items:center;min-height:120px}
+.mon-big img{width:120px;height:120px;object-fit:contain;display:block;margin:0 auto}
+@keyframes bob{50%{transform:translateY(-6px)}}
+.hurt{animation:hurt .45s}
+@keyframes hurt{0%,100%{transform:translateX(0);filter:none}25%{transform:translateX(-12px);filter:brightness(2)}75%{transform:translateX(12px)}}
+.hp{height:20px;background:var(--paper);border:3px solid var(--line);border-radius:99px;overflow:hidden}
+.hp i{display:block;height:100%;background:linear-gradient(90deg,var(--red),var(--gold));transition:width .5s}
+
+.stem{color:#1d2b53;font-weight:900;font-size:20px;margin:14px 0}
+[data-theme="dark"] .stem{color:#f2f6ff}
+
+.opt{color:#1d2b53;display:flex;align-items:center;gap:10px;width:100%;text-align:left;background:var(--paper);border:3px solid var(--line);border-radius:14px;box-shadow:0 4px 0 var(--line);padding:12px;margin:8px 0;font-weight:700;font-size:16px}
+[data-theme="dark"] .opt{color:#f2f6ff}
+.opt b{flex:0 0 36px;height:36px;border-radius:10px;border:3px solid var(--line);display:grid;place-items:center;color:#fff;font-size:17px}
+.oA b{background:var(--red)}.oB b{background:var(--blue)}.oC b{background:var(--green)}.oD b{background:var(--gold2)}
+.opt.picked{outline:4px solid var(--gold)}
+.pop{font-family:"Arial Black",sans-serif;font-size:22px;margin:6px 0}
+.pop.hit{color:var(--green)}.pop.miss{color:var(--red);font-family:inherit;font-size:16px}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th,td{padding:7px 6px;border-bottom:2px solid var(--line);text-align:left}
+th{font-size:13px;color:var(--mut)}
+.badge{display:inline-block;font-size:12px;font-weight:900;border-radius:99px;padding:2px 9px;border:2px solid var(--line)}
+.b-ok{background:var(--green);color:#fff}.b-mid{background:var(--gold);color:var(--ink)}.b-hi{background:var(--red);color:#fff}
+.target{background:var(--gold);border-radius:8px;padding:0 6px;font-size:12px;font-weight:900;border:2px solid var(--line);color:var(--ink)}
+ol{padding-left:22px;margin:6px 0}
+summary{cursor:pointer;margin:8px 0}
+@media(max-width:600px){.stem{font-size:17px}.mon-big{font-size:70px}.mon-big img{width:96px;height:96px}}
+
+.next-card{background:linear-gradient(135deg,var(--gold),var(--gold2));color:var(--ink);border:3px solid var(--line);border-radius:16px;padding:16px;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center;gap:12px;box-shadow:0 5px 0 var(--line);cursor:pointer;transition:transform .15s}
+.next-card:hover{transform:translateY(-2px)}
+.next-card h3{margin:0 0 4px;font-size:16px;font-family:"Arial Black",sans-serif}
+.next-card p{margin:0;font-size:13px;font-weight:700}
+.next-card button{margin:0;background:var(--paper);border:2px solid var(--line);box-shadow:0 2px 0 var(--line)}
+.glossary-link{text-decoration:underline dotted;cursor:pointer;font-weight:900;color:var(--blue)}
+[data-theme="dark"] .glossary-link{color:var(--gold)}
+
+.byte-welcome{display:flex;gap:12px;align-items:flex-start;margin-bottom:8px}
+.byte-face{flex:0 0 auto;display:grid;place-items:center}
+.byte-face img{width:56px;height:56px;object-fit:contain;display:block;animation:bob 2.4s ease-in-out infinite}
+.backlink{color:var(--mut);text-decoration:none;font-size:13px;font-weight:700}
+.backlink:hover{color:var(--ink)}
+
+.theme-toggle{position:fixed;bottom:18px;right:18px;z-index:99;width:48px;height:48px;padding:0;font-size:22px;line-height:1;border-radius:50%;display:grid;place-items:center;background:var(--paper);color:var(--ink);border:3px solid var(--line);box-shadow:0 4px 0 var(--line)}
+.theme-toggle::after{content:'🌙'}
+[data-theme="dark"] .theme-toggle::after{content:'☀️'}
+
+#intro{position:fixed;inset:0;z-index:500;display:grid;place-items:center;background:url('/static/bg-lightmode.png') center/cover no-repeat fixed;transition:opacity .55s ease, transform .55s ease;overflow:hidden}
+[data-theme="dark"] #intro{background:url('/static/bg-darkmode.png') center/cover no-repeat fixed}
+#intro.leave{opacity:0;transform:scale(1.06);pointer-events:none}
+.intro-box{display:flex;flex-direction:row;align-items:center;justify-content:center;gap:40px;padding:24px;max-width:960px;width:100%;box-sizing:border-box}
+@media(max-width:720px){.intro-box{flex-direction:column;text-align:center;gap:20px}}
+.intro-text{flex:1 1 auto;display:grid;gap:14px;text-align:left;min-width:0}
+@media(max-width:720px){.intro-text{text-align:center;justify-items:center}}
+.intro-bot{flex:0 0 auto;opacity:0;transform:scale(.2) rotate(-20deg);animation:botIn .9s cubic-bezier(.2,1.4,.4,1) .2s forwards;display:grid;place-items:center;max-width:40vw}
+.intro-bot img{width:240px;height:240px;max-width:100%;max-height:100%;object-fit:contain;display:block;filter:drop-shadow(0 10px 0 rgba(0,0,0,.18))}
+.intro-bot .emoji{font-size:120px;line-height:1}
+@keyframes botIn{0%{opacity:0;transform:scale(.2) rotate(-20deg)}60%{opacity:1;transform:scale(1.15) rotate(6deg)}100%{opacity:1;transform:scale(1) rotate(0)}}
+.intro-bot.bob{animation:botIn .9s cubic-bezier(.2,1.4,.4,1) .2s forwards,bob 2.4s ease-in-out 1.2s infinite}
+@media(max-width:720px){.intro-bot img{width:180px;height:180px}}
+.intro-title{font-family:"Arial Black","Trebuchet MS",sans-serif;font-size:34px;letter-spacing:.04em;margin:0;color:var(--ink);min-height:1.3em;white-space:pre-wrap}
+.intro-title .cursor,.intro-line .cursor{display:inline-block;width:.08em;height:1em;background:var(--gold);margin-left:2px;vertical-align:-2px;animation:blink .9s steps(1) infinite}
+@keyframes blink{50%{opacity:0}}
+.intro-line{font-size:17px;line-height:1.55;color:var(--ink);min-height:3.4em;max-width:480px;white-space:pre-wrap;opacity:0;margin:0}
+.intro-line.show{opacity:1}
+.intro-skip{position:fixed;bottom:22px;right:22px;background:transparent;color:var(--ink);border:3px solid var(--line);border-radius:12px;padding:8px 14px;font:700 13px "Trebuchet MS",sans-serif;box-shadow:0 4px 0 var(--line);cursor:pointer;opacity:.65;margin:0}
+.intro-skip:hover{opacity:1}
+#login.reveal{animation:reveal .5s ease both}
+@keyframes reveal{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+
+.auth-tabs{display:flex;gap:6px;margin-bottom:14px}
+.auth-tabs button{flex:1;background:var(--paper);color:var(--ink);border:3px solid var(--line);box-shadow:0 4px 0 var(--line);padding:9px;font-size:14px}
+.auth-tabs button.on{background:var(--green);color:#fff;border-color:var(--line)}
+#signupForm{display:none}
+#signupForm.on{display:block}
+#loginForm.off{display:none}
+.avatar-label{display:block;margin-top:12px;color:var(--mut);font-size:13px;font-weight:700}
+.avatar-picker{display:grid;grid-template-columns:repeat(8,1fr);gap:6px;margin-top:6px}
+@media(max-width:520px){.avatar-picker{grid-template-columns:repeat(4,1fr)}}
+.avatar-pick{aspect-ratio:1;display:grid;place-items:center;background:var(--paper);border:2px solid var(--line);border-radius:12px;font-size:22px;cursor:pointer;box-shadow:0 3px 0 var(--line);padding:0;transition:transform .12s}
+.avatar-pick:hover{transform:translateY(-1px)}
+.avatar-pick.on{background:var(--blue);border-color:var(--blue);box-shadow:0 3px 0 var(--line)}
+.avatar-preview{display:flex;align-items:center;gap:10px;margin-top:8px;color:var(--mut);font-size:13px}
+.avatar-preview .big{font-size:38px;line-height:1}
+
+.strength-meter { height: 6px; border-radius: 3px; background: #ddd; margin-top: 6px; overflow: hidden; }
+.strength-meter div { height: 100%; width: 0; transition: width 0.3s, background-color 0.3s; }
+.strength-weak { width: 33%; background: var(--red); }
+.strength-medium { width: 66%; background: var(--gold); }
+.strength-strong { width: 100%; background: var(--green); }
+
+.chat-wrap{display:flex;flex-direction:column;gap:12px;margin:10px 0}
+.chat-row{display:flex;gap:10px;align-items:flex-start;animation:chatin .35s ease both}
+@keyframes chatin{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.chat-ava{flex:0 0 44px;width:44px;height:44px;border-radius:50%;display:grid;place-items:center;background:var(--paper);border:3px solid var(--line);box-shadow:0 3px 0 var(--line);overflow:hidden;font-size:24px;}
+.chat-ava img{width:38px;height:38px;object-fit:contain;display:block}
+.chat-bubble{background:var(--paper);border:3px solid var(--line);border-radius:16px;padding:10px 14px;box-shadow:0 4px 0 var(--line);font-size:15px;line-height:1.5;flex:1;max-width:calc(100% - 60px)}
+.chat-bubble .byte-name{color:var(--blue);font-weight:900;font-size:12px;display:block;margin-bottom:2px}
+.chat-row.user{flex-direction:row-reverse}
+.chat-row.user .chat-bubble{background:var(--gold);color:#1d2b53;text-align:right;font-weight:700}
+.chat-row.user .chat-ava{background:var(--blue);color:#0b1729;font-weight:900;font-size:24px;border-color:var(--line)}
+.chat-row.card .chat-bubble{background:linear-gradient(180deg,#eef9ff,#ffffff);border-style:dashed}
+[data-theme="dark"] .chat-row.card .chat-bubble{background:linear-gradient(180deg,#1a2744,#101c33)}
+.chat-row.card .chat-bubble .card-title{font-family:"Arial Black",sans-serif;font-size:14px;color:var(--blue);margin-bottom:4px}
+.chat-row.card .chat-bubble .card-body{font-size:14px;line-height:1.55}
+.sim-box .sim-title{font-family:"Arial Black",sans-serif;font-size:14px;color:var(--green);margin-bottom:6px}
+.sim-box .sim-prompt{font-size:13px;color:var(--mut);margin-bottom:10px}
+.sim-step{background:rgba(46,194,126,.10);border:2px solid var(--green);border-radius:10px;padding:8px 10px;margin:6px 0;display:flex;gap:10px;align-items:center;animation:chatin .35s ease both}
+[data-theme="dark"] .sim-step{background:rgba(77,217,163,.10)}
+.sim-step .s-num{flex:0 0 24px;height:24px;border-radius:50%;background:var(--green);color:#fff;display:grid;place-items:center;font-size:12px;font-weight:900}
+.sim-step .s-body{flex:1;font-size:14px}
+.sim-step .s-math{font-family:ui-monospace,"Consolas",monospace;font-weight:700;color:var(--blue);display:block;margin-top:2px}
+
+.chat-row.ask .chat-bubble{background:var(--paper);border:3px solid var(--blue)}
+.ask-prompt{font-weight:700;font-size:15px;margin-bottom:10px}
+.ask-opts{display:grid;gap:6px;margin-bottom:10px}
+.ask-opt{display:block;width:100%;text-align:left;background:var(--paper);color:var(--ink);border:2px solid var(--line);border-radius:10px;padding:9px 12px;font-weight:700;font-size:14px;box-shadow:0 3px 0 var(--line);cursor:pointer;margin:0}
+.ask-opt:hover{background:#eef9ff}
+[data-theme="dark"] .ask-opt:hover{background:#1a2744}
+.ask-opt.correct{background:var(--green);color:#fff}
+.ask-opt.wrong{background:var(--red);color:#fff;opacity:.65}
+.ask-input{display:flex;gap:6px;align-items:stretch;margin-top:6px}
+.ask-input input{flex:1;margin:0;font-size:15px;padding:9px 12px;border-radius:12px}
+.ask-input button{margin:0;background:var(--blue);color:#0b1729;font-size:14px;padding:0 16px;border-radius:12px;flex:0 0 auto}
+.ask-hint{margin-top:10px;padding:8px 10px;border-radius:10px;background:rgba(255,183,3,.18);border:2px dashed var(--gold);font-size:13px;animation:chatin .3s ease both}
+
+.typing-indicator{display:inline-flex;gap:4px;align-items:center;padding:4px 0}
+.typing-indicator i{width:7px;height:7px;border-radius:50%;background:var(--blue);opacity:.35;animation:tdot 1.2s infinite}
+.typing-indicator i:nth-child(2){animation-delay:.2s}
+.typing-indicator i:nth-child(3){animation-delay:.4s}
+@keyframes tdot{0%,100%{opacity:.25;transform:translateY(0)}50%{opacity:1;transform:translateY(-3px)}}
+
+.chat-done{background:linear-gradient(135deg,#10b981,#059669);color:#fff;text-align:center;padding:14px;border-radius:14px;font-weight:900;font-family:"Arial Black",sans-serif;margin:12px 0;border:3px solid var(--line);box-shadow:0 4px 0 var(--line);animation:chatin .4s ease both}
+
+.lesson-tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
+.lesson-tabs button{flex:1;min-width:110px;background:var(--paper);color:var(--ink);border:3px solid var(--line);box-shadow:0 4px 0 var(--line);padding:8px 6px;font-size:13px}
+.lesson-tabs button.on{background:var(--blue);color:#0b1729;border-color:var(--line)}
+.lesson-tabs button.done::after{content:' ✓';color:var(--green);font-weight:900}
+.lesson-tabs button.on.done::after{color:#0b1729}
+
+.boss-tile{grid-column:1 / -1;background:linear-gradient(135deg,#3b1e8f 0%,#6d4aff 100%);color:#fff;border:3px solid var(--line);border-radius:18px;padding:18px;box-shadow:0 6px 0 var(--line);display:flex;align-items:center;gap:16px;cursor:pointer;margin:0 0 4px}
+.boss-tile:hover{filter:brightness(1.08)}
+.boss-tile.locked{background:linear-gradient(135deg,#374151,#1f2937);cursor:not-allowed;opacity:.7}
+.boss-tile.defeated{background:linear-gradient(135deg,#b45309,#f59e0b)}
+.boss-tile .bt-face{font-size:56px;line-height:1;flex:0 0 auto;animation:bob 2s ease-in-out infinite}
+.boss-tile .bt-title{font-family:"Arial Black",sans-serif;font-size:18px;margin:0 0 4px}
+.boss-tile .bt-sub{font-size:13px;opacity:.9;margin:0}
+.boss-tile .bt-badge{margin-left:auto;background:rgba(255,255,255,.22);border:2px solid rgba(255,255,255,.4);padding:4px 10px;border-radius:99px;font-size:11px;font-weight:900;letter-spacing:.05em}
+.diag-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0}
+@media(max-width:600px){.diag-grid{grid-template-columns:1fr}}
+.diag-card{background:var(--paper);border:3px solid var(--line);border-radius:12px;padding:12px;box-shadow:0 4px 0 var(--line)}
+.diag-card small{display:block;color:var(--mut);font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;margin-bottom:4px}
+.diag-card b{font-size:22px;font-weight:900}
+.diag-card b.ok{color:var(--green)}.diag-card b.mid{color:var(--gold2)}.diag-card b.hi{color:var(--red)}
+
+.modal-bg{position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.55);display:grid;place-items:center;padding:20px;animation:fadein .2s ease both}
+@keyframes fadein{from{opacity:0}to{opacity:1}}
+.modal-card{background:var(--paper);border:4px solid var(--line);border-radius:20px;box-shadow:0 8px 0 var(--line);padding:22px;width:100%;max-width:480px;max-height:90vh;overflow-y:auto;animation:popin .25s ease both;position:relative}
+@keyframes popin{from{transform:scale(.92);opacity:0}to{transform:scale(1);opacity:1}}
+.modal-card h2{margin-top:0}
+.modal-card .modal-row{display:flex;gap:8px;justify-content:flex-end;margin-top:16px}
+.profile-lock{display:flex;align-items:center;gap:8px;margin-top:12px;color:var(--mut);font-size:13px}
+.profile-lock code{background:var(--paper);border:2px solid var(--line);border-radius:8px;padding:2px 8px;font-size:12px;font-family:ui-monospace,monospace}
+
+.confirm-box{background:var(--paper);border:4px solid var(--line);border-radius:16px;padding:22px;box-shadow:0 6px 0 var(--line);max-width:400px;width:100%;text-align:center;animation:popin .2s ease both}
+.confirm-box h3{margin:0 0 10px;font-size:18px;font-family:"Arial Black",sans-serif}
+.confirm-box p{margin:0 0 18px;color:var(--mut);font-weight:600;white-space:pre-wrap}
+.confirm-box .row{justify-content:center;gap:12px}
+.confirm-box button{margin:0}
+
+.esbar{display:flex;height:26px;border-radius:6px;overflow:hidden;border:2px solid var(--line);font-size:12px;font-weight:800;color:#fff;margin:10px 0}
+.esbar div{display:grid;place-items:center;transition:flex-basis .4s ease}
+.esbar .ef{background:#ef4444}
+.esbar .ep{background:#f59e0b}
+.esbar .ec{background:#8b5cf6}
+.esbar .eu{background:#6b7280}
+.eslegend{display:flex;gap:16px;flex-wrap:wrap;font-size:13px;color:var(--mut);margin-top:4px}
+.eslegend b{color:var(--ink);font-weight:800}
+.dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px;vertical-align:middle}
+.dot.f{background:#ef4444}.dot.p{background:#f59e0b}.dot.c{background:#8b5cf6}.dot.u{background:#6b7280}
+
+.coverage{background:var(--paper);border:2px solid var(--line);border-radius:10px;padding:10px 14px;margin:10px 0;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.coverage .cov-bar{flex:1;min-width:140px;height:14px;border-radius:99px;background:rgba(0,0,0,.08);overflow:hidden;border:2px solid var(--line)}
+[data-theme="dark"] .coverage .cov-bar{background:rgba(255,255,255,.08)}
+.coverage .cov-bar i{display:block;height:100%;background:linear-gradient(90deg,var(--gold),var(--green));transition:width .5s}
+.coverage b{font-weight:800}
+
+.history-list{display:grid;gap:8px}
+.history-item{background:var(--paper);border:2px solid var(--line);border-radius:12px;padding:10px 14px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;box-shadow:0 3px 0 var(--line)}
+.history-item .h-kind{font-size:11px;font-weight:900;border-radius:99px;padding:3px 10px;border:2px solid var(--line);background:var(--blue);color:#fff}
+.history-item .h-kind.retest{background:var(--gold);color:var(--ink)}
+.history-item .h-kind.longtest{background:var(--purple);color:#fff}
+.history-item .h-kind.inprog{background:var(--mut)}
+.history-item .h-name{flex:1;font-weight:700;min-width:140px}
+.history-item .h-date{font-size:12px;color:var(--mut);min-width:100px}
+.history-item .h-score{font-weight:900;font-family:ui-monospace,monospace}
+
+.assigned-banner { background: var(--purple); color: #fff; border: 3px solid var(--line); border-radius: 14px; padding: 12px 16px; font-weight: 700; margin-bottom: 14px; box-shadow: 0 4px 0 var(--line); display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.assigned-banner button { background: var(--paper); color: var(--ink); border: 2px solid var(--line); padding: 6px 12px; font-size: 13px; margin: 0; }
+
+.verify-banner { background: var(--gold2); color: #fff; border: 3px solid var(--line); border-radius: 14px; padding: 12px 16px; font-weight: 700; margin-bottom: 14px; box-shadow: 0 4px 0 var(--line); display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.verify-banner button { background: var(--paper); color: var(--ink); border: 2px solid var(--line); padding: 6px 12px; font-size: 13px; margin: 0; }
+
+.note-item { background: var(--paper); padding: 12px; border-radius: 10px; margin-bottom: 8px; border: 2px solid var(--line); box-shadow: 0 2px 0 var(--line); }
+.note-meta { font-size: 12px; color: var(--mut); margin-bottom: 4px; font-weight: 700; }
+.star-picker button { background: transparent; border: none; box-shadow: none; font-size: 32px; color: var(--mut); padding: 0 4px; margin: 0; cursor: pointer; }
+.star-picker button.on { color: var(--gold); }
+.star-picker button:hover { transform: scale(1.1); }
+
+/* Custom Searchable Dropdown */
+.search-select-wrap { position: relative; width: 100%; max-width: 400px; margin-top: 8px; }
+.search-select-input { width: 100%; box-sizing: border-box; padding: 10px 14px; border-radius: 12px; border: 3px solid var(--line); background: var(--paper); color: var(--ink); font: 16px "Trebuchet MS", sans-serif; margin: 0; cursor: pointer; }
+.search-select-input:focus { outline: none; border-color: var(--blue); box-shadow: 0 0 0 3px rgba(17,138,178,.2); cursor: text; }
+.search-select-menu { position: absolute; top: calc(100% + 6px); left: 0; right: 0; background: var(--paper); border: 3px solid var(--line); border-radius: 12px; box-shadow: 0 6px 0 var(--line); max-height: 220px; overflow-y: auto; z-index: 100; }
+.search-select-item { padding: 12px 14px; cursor: pointer; font-weight: 700; border-bottom: 2px solid var(--line); transition: background .15s; }
+.search-select-item:last-child { border-bottom: none; }
+.search-select-item:hover { background: var(--sel); }
+.search-select-item.active { background: var(--gold); color: var(--ink); }
+.search-select-empty { padding: 12px 14px; color: var(--mut); font-style: italic; font-size: 14px; }
+</style>
+</head>
+<body>
+<button id="themeBtn" class="theme-toggle" data-act="theme" title="Switch light / dark" aria-label="Switch light or dark theme"></button>
+
+<div id="intro">
+  <div class="intro-box">
+    <div class="intro-bot" id="introBot">
+      <img src="/static/robot.png" alt="Byte"
+           onerror="this.outerHTML='<div class=&quot;emoji&quot;>🤖</div>'">
+    </div>
+    <div class="intro-text">
+      <h1 class="intro-title" id="introTitle"></h1>
+      <p class="intro-line" id="introLine"></p>
+    </div>
+  </div>
+  <button class="intro-skip" id="introSkip">Skip intro ▸</button>
+</div>
+
+<main>
+<section id="login" class="panel" hidden>
+  <div class="byte-welcome">
+    <div class="byte-face">
+      <img src="/static/robot.png" alt="Byte"
+           onerror="this.outerHTML='🤖'">
+    </div>
+    <div>
+      <p class="mut" style="margin-top: 14px;"><b>Byte:</b> Login/sign up first to start our journey.</p>
+    </div>
+  </div>
+
+  <div class="auth-tabs">
+    <button type="button" id="tabSignin" class="on">Sign in</button>
+    <button type="button" id="tabSignup">Sign up</button>
+  </div>
+
+  <form id="loginForm">
+    <label>Email<input id="e" type="email" autocomplete="email"></label>
+    <label>Password<input id="p" type="password" autocomplete="current-password"></label>
+    <p class="err" id="err"></p>
+    <button class="cta" type="submit" style="width:100%">Start playing</button>
+  </form>
+
+  <form id="signupForm">
+    <label>Your name<input id="suName" type="text" autocomplete="name" maxlength="80" placeholder="e.g. Maria Santos"></label>
+    <label>Email<input id="suEmail" type="email" autocomplete="email" placeholder="you@example.com"></label>
+    <label>Password<input id="suPass" type="password" autocomplete="new-password" placeholder="Min 8 chars, 1 upper, 1 lower, 1 number"></label>
+    <div class="strength-meter"><div id="strengthBar"></div></div>
+    <label>Confirm Password<input id="suConfirmPass" type="password" autocomplete="new-password" placeholder="Type your password again"></label>
+    <span class="avatar-label">Pick your avatar</span>
+    <div class="avatar-picker" id="avatarPicker"></div>
+    <div class="avatar-preview"><span class="big" id="avatarPreview">🎓</span><span>This is how Byte will see you.</span></div>
+    <p class="err" id="suErr"></p>
+    <button class="cta" type="submit" style="width:100%">Create account & start</button>
+  </form>
+
+  <div class="row" style="margin-top:12px">
+    <button class="g" data-act="demo" data-email="maria@sb.ph">Try Maria</button>
+    <button class="g" data-act="demo" data-email="paolo@sb.ph">Try Paolo</button>
+  </div>
+  <p class="mut">Demo password: Demo1234.</p>
+  <p><a class="backlink" href="/">← Back to start</a></p>
+</section>
+
+<section id="hud" class="panel hud" hidden>
+  <div style="display:flex; justify-content:space-between; align-items:center; width:100%; flex-wrap:wrap; gap:12px;">
+    
+    <!-- Left: Avatar & Name -->
+    <div style="display:flex; align-items:center; gap:8px;">
+      <span id="pavatar" style="font-size:28px;line-height:1;display:grid;place-items:center;"></span>
+      <div><b id="pname"></b> <span class="mut" id="plvl"></span></div>
+    </div>
+
+    <!-- Middle: XP Bar -->
+    <div class="xp" title="Chapters cleared" style="flex:1; margin:0 16px; min-width:150px;"><i id="xpbar" style="width:0%"></i></div>
+
+    <!-- Right: Tutor Dropdown & Buttons -->
+    <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
+      
+      <!-- Tutor Selection & Assign in HUD -->
+      <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+        <div class="search-select-wrap" style="margin:0; width:180px;">
+          <input type="text" class="search-select-input" id="tutorSearch" 
+                 placeholder="Search tutor..." autocomplete="off" 
+                 style="padding:8px 12px; font-size:14px; height:38px; border-radius:10px;">
+          <div class="search-select-menu" id="tutorMenu" hidden></div>
+        </div>
+        <button class="cta" data-act="assigntutor" style="margin:0; padding:8px 16px; font-size:14px;">Assign</button>
+      </div>
+
+      <button class="g" data-act="editprofile" style="margin:0;">✏️ Edit profile</button>
+      <button class="g" data-act="logout" style="margin:0;">Log out</button>
+    </div>
+
+  </div>
+</section>
+
+<div id="view"></div>
+<div id="profileModal"></div>
+</main>
+<script>
+const $ = id => document.getElementById(id);
+let TOK = localStorage.getItem('sb_token') || '', ME = null, S = null, SEL = null, FB = null, MSG = '', TUT = [];
+const MONS = ['👾', '🐉', '🧟', '🦂', '🕷️', '🐺', '🦇', '🐍', '🗿', '🧙'];
+const SHORT = ['Nature', 'Language', 'Reasoning', 'Data', 'Central', 'Variability', 'Normal', 'Correlation', 'Voting', 'Graphs'];
+const HINT = {F: 'Recheck your arithmetic one step at a time.', P: 'Write out the formula, then put in each value.', C: 'Think about what the concept means first.'};
+const band = p => p >= 80 ? ['Mastered', 'b-ok'] : p >= 60 ? ['Developing', 'b-mid'] : ['Needs Review', 'b-hi'];
+const pct = x => Math.round(x) + '%';
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;'}[c]));
+
+const AVATARS = ["🎓", "🎒", "📚", "💡", "🧙", "🦸", "🧚", "🐯",
+                 "🐼", "🦊", "🐸", "🦁", "🐨", "🐰", "🐧", "🦄"];
+let PICKED_AVATAR = "🎓";
+let EDIT_AVATAR = null;
+let EDIT_NAME = "";
+let EDIT_OPEN = false;
+let CONFIRM = null;
+
+let pendingRating = null;
+let ratingStars = 0;
+
+let TUTOR_SEARCH = '';
+let TUTOR_DROPDOWN_OPEN = false;
+let TUTOR_SELECTED_ID = undefined; // Tracks the currently highlighted option in the dropdown
+
+const GLOSSARY = {
+    "Number patterns": "A sequence of numbers that follows a specific mathematical rule (e.g., adding 2 each time).",
+    "Fibonacci & golden ratio": "A sequence where each number is the sum of the two preceding ones. The golden ratio (~1.618) is the limit of the ratio of consecutive Fibonacci numbers.",
+    "Nature & role of math": "Mathematics is the universal language used to describe, model, and predict patterns in the natural world.",
+    "Symbols & propositions": "Mathematical statements that are declarative and can be classified as either true or false.",
+    "Set notation": "Using braces { } to define a collection of distinct objects, often using set-builder notation.",
+    "Set operations": "Operations like union (∪), intersection (∩), and complement that combine or relate sets.",
+    "Sequences & induction": "Using specific observations to form a general rule or predict the next term in a sequence.",
+    "Reasoning & applied": "The process of solving problems using Polya's four steps: understand, plan, carry out, and look back.",
+    "Population & sample": "Population is the entire group being studied; a sample is a subset of that population.",
+    "Variables & data types": "Qualitative variables describe categories; quantitative variables describe numerical amounts (discrete or continuous).",
+    "Levels of measurement": "Nominal (names), Ordinal (ordered categories), Interval (equal differences, no true zero), Ratio (true zero).",
+    "Mean": "The average of a data set, found by adding all values and dividing by the count.",
+    "Median & quartiles": "The middle value of a sorted data set; quartiles divide the data into four equal parts.",
+    "Mode & outliers": "The most frequent value in a data set. Outliers are extreme values that can skew the mean.",
+    "Range": "The difference between the highest and lowest values in a data set.",
+    "Std deviation & variance": "Measures of spread. Variance is the average of squared deviations from the mean; standard deviation is its square root.",
+    "Normal curve properties": "A bell-shaped, symmetric distribution where the mean, median, and mode are equal.",
+    "z-score computation": "A measure of how many standard deviations a value is from the mean: z = (x - mean) / SD.",
+    "z meaning & empirical rule": "68% of data falls within 1 SD, 95% within 2 SD, and 99.7% within 3 SD of the mean.",
+    "Interpreting r": "Correlation coefficient r ranges from -1 to 1. The sign indicates direction, and the size indicates strength.",
+    "r range & special values": "r = 1 is perfect positive, r = -1 is perfect negative, and r = 0 indicates no linear relationship.",
+    "Regression & prediction": "Using the equation of the best-fit line (y = a + bx) to predict the value of a dependent variable.",
+    "Apportionment & plurality": "Dividing seats proportionally. Plurality means the candidate with the most votes wins, even without a majority.",
+    "Borda & instant runoff": "Borda counts rank points; instant runoff eliminates the lowest candidate and reallocates votes.",
+    "Weighted voting": "A system {q: w1, w2...} where a coalition wins if its combined weight meets or exceeds the quota q.",
+    "Graph structure & Euler": "Vertices (points) connected by edges. An Euler path exists if exactly 0 or 2 vertices have an odd degree.",
+    "Planar graphs & coloring": "A graph that can be drawn without crossing edges. The Four-Color Theorem states 4 colors are enough."
+};
+
+function checkPasswordStrength(pw) {
+  let score = 0;
+  if (pw.length >= 8) score++;
+  if (/[A-Z]/.test(pw) && /[a-z]/.test(pw)) score++;
+  if (/[0-9]/.test(pw)) score++;
+  return score;
+}
+
+document.getElementById('suPass').addEventListener('input', function (e) {
+  const score = checkPasswordStrength(e.target.value);
+  const bar = document.getElementById('strengthBar');
+  bar.className = '';
+  if (score === 1) bar.className = 'strength-weak';
+  else if (score === 2) bar.className = 'strength-medium';
+  else if (score === 3) bar.className = 'strength-strong';
+  else bar.style.width = '0%';
+});
+
+function moduleUnlocked(m) {
+  if (m === 0) return true;
+  if (!S || !S.modules || m < 0 || m >= S.modules.length) return false;
+  const prev = S.modules[m - 1];
+  return !!(prev && prev.pretest === 'submitted');
+}
+
+function buildAvatarPicker() {
+  const wrap = document.getElementById('avatarPicker');
+  if (!wrap) return;
+  wrap.innerHTML = AVATARS.map(a =>
+    `<button type="button" class="avatar-pick ${a === PICKED_AVATAR ? 'on' : ''}" data-act="pickava" data-a="${a}">${a}</button>`
+  ).join('');
+  const prev = document.getElementById('avatarPreview');
+  if (prev) prev.textContent = PICKED_AVATAR;
+}
+
+function switchAuthTab(which) {
+  const si = document.getElementById('tabSignin');
+  const su = document.getElementById('tabSignup');
+  const lf = document.getElementById('loginForm');
+  const sf = document.getElementById('signupForm');
+  if (!si || !su || !lf || !sf) return;
+  if (which === 'signin') {
+    si.classList.add('on'); su.classList.remove('on');
+    lf.classList.remove('off'); sf.classList.remove('on');
+  } else {
+    su.classList.add('on'); si.classList.remove('on');
+    sf.classList.add('on'); lf.classList.add('off');
+    buildAvatarPicker();
+  }
+}
+
+function openEditProfile() {
+  EDIT_OPEN = true;
+  EDIT_AVATAR = ME.avatar || '🎓';
+  EDIT_NAME = ME.name || '';
+  render();
+}
+
+function closeEditProfile() {
+  EDIT_OPEN = false;
+  render();
+}
+
+function renderEditProfile() {
+  const wrap = document.getElementById('profileModal');
+  if (!wrap) return;
+  wrap.innerHTML = `
+    <div class="modal-bg" data-act="closemodal">
+      <div class="modal-card">
+        <h2>Edit profile</h2>
+        <p class="mut">Change how Byte and your tutor see you. Your ID and email stay locked.</p>
+        <label style="display:block;margin-top:14px;color:var(--mut);font-size:13px;font-weight:700">Display name</label>
+        <input id="editName" type="text" maxlength="80" value="${esc(EDIT_NAME)}">
+        <span class="avatar-label">Avatar</span>
+        <div class="avatar-picker">
+          ${AVATARS.map(a =>
+            `<button type="button" class="avatar-pick ${a === EDIT_AVATAR ? 'on' : ''}" data-act="editpickava" data-a="${a}">${a}</button>`
+          ).join('')}
+        </div>
+        <div class="avatar-preview">
+          <span class="big">${esc(EDIT_AVATAR)}</span>
+          <span>This is how Byte will see you.</span>
+        </div>
+        <div class="profile-lock">🔒 Student ID: <code>${esc(ME.id || '—')}</code></div>
+        <div class="profile-lock">🔒 Email: <code>${esc(ME.email || '—')}</code></div>
+        <p class="err" id="editErr"></p>
+        <div style="margin-top:20px; border-top:2px dashed var(--line); padding-top:12px;">
+          <button class="g" data-act="deleteaccount" style="width:100%; color:var(--red); border-color:var(--red);">Delete Account</button>
+        </div>
+        <div class="modal-row">
+          <button class="g" data-act="closedit">Cancel</button>
+          <button class="cta" data-act="savedit">Save changes</button>
+        </div>
+      </div>
+    </div>`;
+}
+
+async function saveEditProfile() {
+  const errEl = document.getElementById('editErr');
+  if (errEl) errEl.textContent = '';
+  const name = (document.getElementById('editName')?.value || '').trim();
+  if (name.length < 2) {
+    if (errEl) errEl.textContent = 'Name must be at least 2 characters.';
+    return;
+  }
+  try {
+    const j = await api('POST', '/api/student/profile', {name, avatar: EDIT_AVATAR});
+    ME.name = j.name;
+    ME.avatar = j.avatar;
+    MSG = 'Profile updated ✓';
+    closeEditProfile();
+    await refresh();
+  } catch (err) {
+    if (errEl) errEl.textContent = err.message;
+  }
+}
+
+async function deleteAccount() {
+  doConfirm('Delete Account?', 'Are you sure? This will permanently disable your account and you will be logged out.', async () => {
+    try {
+      await api('POST', '/api/student/delete', {});
+      logout();
+    } catch (e) { alert(e.message); }
+  }, 'Delete');
+}
+
+const monIcon = (m, big) => {
+  const emoji = MONS[m] || '👾';
+  const size = big ? '120' : '56';
+  return `<img src="/static/ch${m + 1}.png" alt="${emoji}" width="${size}" height="${size}"
+    style="object-fit:contain;display:block"
+    onerror="this.outerHTML='${emoji}'">`;
+};
+
+async function api(method, path, body) {
+  const headers = {'Content-Type': 'application/json', 'Authorization': 'Bearer ' + TOK};
+  const r = await fetch(path, {method, headers,
+                               body: body ? JSON.stringify(body) : undefined});
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(j.error || 'Request failed');
+  return j;
+}
+
+function logout() { 
+ const tok = TOK;
+  clearChat();
+  closeEditProfile();
+  pendingRating = null;
+  ratingStars = 0;
+  TUTOR_DROPDOWN_OPEN = false;
+  TUTOR_SEARCH = '';
+  TUTOR_SELECTED_ID = undefined;
+  TOK = ''; ME = null; S = null; SEL = null; FB = null;
+  localStorage.removeItem('sb_token');
+  render();
+  // Invalidate the server-side session so a leaked token stops working.
+  if (tok) {
+    fetch('/api/logout', {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + tok }
+    }).catch(() => {});
+  }
+}
+
+async function login(email, pw) {
+  $('err').textContent = '';
+  try {
+    const j = await api('POST', '/api/login', {email, password: pw});
+    if (j.role !== 'student') { $('err').textContent = 'This quest is for students. Tutors and admins use the staff dashboard at /dashboard.'; return; }
+    TOK = j.token; localStorage.setItem('sb_token', TOK); ME = j;
+    await refresh();
+  } catch (e) { $('err').textContent = e.message; }
+}
+
+async function refresh() {
+  S = await api('GET', '/api/student/state');
+  if (!TUT.length) TUT = await api('GET', '/api/tutors');
+  
+  // Sync the local selection with the DB state
+  TUTOR_SELECTED_ID = S.tutor_id || null;
+  
+  render();
+}
+
+function tileTag(b) {
+  if (S.attempt && S.module === b.module) return ['In battle', 'now'];
+  if (!moduleUnlocked(b.module)) return ['🔒 Locked', 'locked'];
+  const done = b.lesson && b.lesson.lesson_done;
+  if (b.retest === 'submitted') return ['Retested', 'retested'];
+  if (b.pretest === 'submitted') return b.targets.length ? ['Retest ready', 'ready'] : ['Cleared', 'cleared'];
+  if (!done) return ['Learn', ''];
+  return ['Start', ''];
+}
+
+function skillLink(name) {
+  return `<span class="glossary-link" data-act="glossary" data-skill="${esc(name)}">${esc(name)}</span>`;
+}
+
+function progressRing(done, total) {
+  const pct = done / total;
+  const radius = 16;
+  const circ = 2 * Math.PI * radius;
+  const dash = circ * pct;
+  return `<svg width="40" height="40" viewBox="0 0 40 40" class="ring">
+    <circle cx="20" cy="20" r="${radius}" fill="none" stroke="rgba(0,0,0,.1)" stroke-width="4" />
+    <circle cx="20" cy="20" r="${radius}" fill="none" stroke="var(--gold)" stroke-width="4" stroke-dasharray="${circ}" stroke-dashoffset="${circ - dash}" transform="rotate(-90 20 20)" />
+    <text x="20" y="24" text-anchor="middle" font-size="10" font-weight="bold" fill="var(--ink)">${done}/${total}</text>
+  </svg>`;
+}
+
+function renderNextCard() {
+  if (S.attempt) return '';
+  if (S.assigned_retests && S.assigned_retests.length > 0) {
+    const r = S.assigned_retests[0];
+    return `<div class="next-card" data-act="mod" data-m="${r.module_id}">
+      <div><h3>📌 Do this next</h3><p>Complete your tutor-assigned retest for Chapter ${r.module_id + 1}.</p></div>
+      <button>Go to Chapter</button>
+    </div>`;
+  }
+  for (let i = 0; i < 10; i++) {
+    const b = S.modules[i];
+    if (!moduleUnlocked(i)) break;
+    if (b.pretest === 'submitted' && b.targets && b.targets.length > 0 && b.retest !== 'submitted') {
+      return `<div class="next-card" data-act="mod" data-m="${i}">
+        <div><h3>📌 Do this next</h3><p>Chapter ${i+1} has a targeted retest ready. Battle the specific skills you missed.</p></div>
+        <button>Start Retest</button>
+      </div>`;
+    }
+    if (b.pretest === 'none') {
+      if (!b.lesson.lesson_done) {
+        return `<div class="next-card" data-act="mod" data-m="${i}">
+          <div><h3>📌 Do this next</h3><p>Learn Chapter ${i+1} with Byte to unlock the module test.</p></div>
+          <button>Start Lesson</button>
+        </div>`;
+      }
+      return `<div class="next-card" data-act="mod" data-m="${i}">
+        <div><h3>📌 Do this next</h3><p>Take the Chapter ${i+1} module test to earn your score and unlock the next chapter.</p></div>
+        <button>Start Test</button>
+      </div>`;
+    }
+  }
+  if (S.long_test && S.long_test.unlocked && !S.long_test.boss_defeated) {
+    return `<div class="next-card" data-act="boss" data-mode="start" style="background:linear-gradient(135deg,var(--purple),var(--blue));color:#fff;">
+      <div><h3>📌 Do this next</h3><p>The Final Boss is ready! Take the 100-item Long Test.</p></div>
+      <button>Fight Boss</button>
+    </div>`;
+  }
+  return '';
+}
+
+function tutorCommentsPanel() {
+  const notes = (S.tutor_comments || []);
+  if (!notes.length) return '';
+  const rows = notes.map(n => `
+    <div class="note-item">
+      <div class="note-meta">${esc((n.created_at || '').replace('T',' ').slice(0,16))} · ${esc(n.tutor_name)}</div>
+      <div>${esc(n.note)}</div>
+    </div>`).join('');
+  return `<section class="panel"><h2>Notes from your tutor</h2>
+    <p class="mut">Messages your tutor left after your sessions.</p>${rows}</section>`;
+}
+
+function evalPanel() {
+  const E = S.evaluation;
+  const COV = S.coverage || {answered: 0, administered: 0, pct: 0};
+  const ES = S.error_source || {counts: {F:0,P:0,C:0,U:0}, pct: {F:0,P:0,C:0,U:0}, total: 0, dominant_label: '—'};
+
+  if (!E.chapters_done) {
+    return `<section class="panel"><h2>My evaluation</h2>
+      <p class="mut">Finish a chapter test and your skill evaluation and study advice appear here.</p></section>`;
+  }
+
+  const top = E.skills.slice(0, 3).map(s => `<li><b>${skillLink(s.skill)}</b> <span class="mut">(Chapter ${s.module + 1})</span>: ${s.action}</li>`).join('');
+
+  const grouped = {};
+  for (const s of E.skills) {
+    const k = s.module;
+    if (!grouped[k]) grouped[k] = [];
+    grouped[k].push(s);
+  }
+
+  const all = Object.keys(grouped).map(modIdx => {
+    const skills = grouped[modIdx];
+    const rows = skills.map(s => {
+      const v = s.after ?? s.before, bd = band(v);
+      return `<tr><td>${skillLink(s.skill)}</td><td>${pct(v)}</td><td><span class="badge ${bd[1]}">${bd[0]}</span></td></tr>`;
+    }).join('');
+    return `<tr><td colspan="3" style="background:var(--sel);font-weight:900;padding:8px">Chapter ${+modIdx + 1}</td></tr>${rows}`;
+  }).join('');
+
+  const coverage = COV.administered
+    ? `<div class="coverage">
+        <span>📋 <b>Coverage:</b> You answered <b>${COV.answered}</b> of <b>${COV.administered}</b> items (${COV.pct}%)</span>
+        <div class="cov-bar"><i style="width:${COV.pct}%"></i></div>
+      </div>`
+    : '';
+
+  let esPanel = '';
+  const c = ES.counts, p = ES.pct, totalEs = ES.total || 0;
+  if (totalEs > 0) {
+    const fw = (c.F || 0) / totalEs * 100;
+    const pw = (c.P || 0) / totalEs * 100;
+    const cw = (c.C || 0) / totalEs * 100;
+    const uw = (c.U || 0) / totalEs * 100;
+    esPanel = `<h3 style="margin-top:16px">Error-source breakdown</h3>
+      <p class="mut">How your wrong answers cluster across three error dimensions.</p>
+      <div class="esbar">
+        ${fw > 0 ? `<div class="ef" style="flex-basis:${fw}%">${p.F}%</div>` : ''}
+        ${pw > 0 ? `<div class="ep" style="flex-basis:${pw}%">${p.P}%</div>` : ''}
+        ${cw > 0 ? `<div class="ec" style="flex-basis:${cw}%">${p.C}%</div>` : ''}
+        ${uw > 0 ? `<div class="eu" style="flex-basis:${uw}%">${p.U}%</div>` : ''}
+      </div>
+      <div class="eslegend">
+        <span><i class="dot f"></i>Arithmetic (F) <b>${c.F}</b></span>
+        <span><i class="dot p"></i>Procedural (P) <b>${c.P}</b></span>
+        <span><i class="dot c"></i>Conceptual (C) <b>${c.C}</b></span>
+        ${c.U > 0 ? `<span><i class="dot u"></i>Unclassified <b>${c.U}</b></span>` : ''}
+      </div>
+      <p style="margin-top:10px;font-weight:700">Dominant error type: <span class="badge b-mid">${esc(ES.dominant_label)}</span></p>`;
+  }
+
+  return `<section class="panel"><h2>My evaluation</h2>
+    <p class="mut">Based on ${E.chapters_done} of 10 chapters · course ${pct(E.course)}</p>
+    ${coverage}
+    <h3>Start with these</h3><ol>${top}</ol>
+    ${esPanel}
+    <details style="margin-top:14px"><summary><b>All evaluated skills (grouped by chapter)</b></summary>
+      <table style="width:100%"><tr><th>Skill</th><th>Now</th><th>Band</th></tr>${all}</table>
+    </details></section>`;
+}
+
+function historyPanel() {
+  const H = S.history || [];
+  if (!H.length) return '';
+  const rows = H.map(h => {
+    const kk = h.kind === 'longtest' ? 'longtest' : (h.kind === 'retest' ? 'retest' : '');
+    const kLabel = h.kind === 'longtest'
+      ? ('Long Test' + (h.scope === 'weak' ? ' (weak retake)' : ''))
+      : (h.kind === 'retest' ? 'Retest' : 'Pretest');
+    const statusTag = h.status === 'in_progress' ? ' <span class="h-kind inprog">in progress</span>' : '';
+    const dateStr = (h.submitted || h.started || '').slice(0, 10);
+    const scoreStr = h.administered ? `${h.correct} / ${h.administered} · ${h.pct}%` : '—';
+    return `<div class="history-item">
+      <span class="h-kind ${kk}">${kLabel}</span>
+      <span class="h-name">${esc(h.module_name || '—')}${statusTag}</span>
+      <span class="h-date">${esc(dateStr)}</span>
+      <span class="h-score">${esc(scoreStr)}</span>
+    </div>`;
+  }).join('');
+  return `<section class="panel"><h2>My attempt history</h2>
+    <p class="mut">Every pretest, retest, and long-test attempt you've made — newest first.</p>
+    <div class="history-list">${rows}</div></section>`;
+}
+
+function bossTile() {
+  const LT = S.long_test || {};
+  if (LT.boss_defeated)
+    return `<button class="boss-tile defeated" data-act="boss" data-mode="view">
+      <span class="bt-face">🏆</span>
+      <span><b class="bt-title">FINAL BOSS — DEFEATED</b>
+      <p class="bt-sub">All items correct on the Long Test. The boss has fallen.</p></span>
+      <span class="bt-badge">CONQUERED</span></button>`;
+  if (LT.attempt)
+    return `<button class="boss-tile" data-act="boss" data-mode="battle">
+      <span class="bt-face">👹</span>
+      <span><b class="bt-title">FINAL BOSS — IN BATTLE</b>
+      <p class="bt-sub">${LT.attempt.scope === 'weak' ? 'Rematch: only your weak skills.' : 'Full 100-item Long Test.'}</p></span>
+      <span class="bt-badge">RESUME</span></button>`;
+  if (!LT.unlocked) {
+    const l = S.lessons_done ? '' : 'Finish all lesson chats. ';
+    const p = S.pretests_done ? '' : 'Submit all 10 module tests. ';
+    return `<div class="boss-tile locked"><span class="bt-face">👹</span>
+      <span><b class="bt-title">FINAL BOSS — LOCKED</b>
+      <p class="bt-sub">${l}${p}</p></span>
+      <span class="bt-badge">LOCKED</span></div>`;
+  }
+  return `<button class="boss-tile" data-act="boss" data-mode="start">
+    <span class="bt-face">👹</span>
+    <span><b class="bt-title">FINAL BOSS — LONG TEST</b>
+    <p class="bt-sub">100 items across all 10 modules. Get a perfect score to claim victory.</p></span>
+    <span class="bt-badge">READY</span></button>`;
+}
+
+function mapScreen() {
+  const tiles = S.modules.map(b => {
+    const [t, cls] = tileTag(b);
+    const l = b.lesson || {};
+    const doneCount = (l.lesson_done?1:0) + (l.simulation_done?1:0) + (l.practice_done?1:0) + (l.scenario_done?1:0);
+    const ring = doneCount > 0 && doneCount < 4 ? progressRing(doneCount, 4) : '';
+    return `<button class="tile ${cls}" data-act="mod" data-m="${b.module}">
+      ${ring}
+      <span class="mon">${monIcon(b.module)}</span>
+      <b>Ch ${b.module + 1}</b><small>${SHORT[b.module]}</small><em>${t}</em></button>`;
+  }).join('');
+
+  let verifyBanner = '';
+  if (ME && ME.is_verified === 0) {
+    verifyBanner = `<div class="verify-banner">
+      <span>⚠️ Your email is not verified. Please check your inbox for the verification link.</span>
+    </div>`;
+  }
+
+  return `${verifyBanner}${renderNextCard()}${tutorCommentsPanel()}${evalPanel()}
+    <section class="panel"><h2>Choose a chapter</h2>
+    <p class="mut">Complete a chapter to unlock the next.</p>
+    <div class="tiles">${tiles}${bossTile()}</div></section>
+    ${historyPanel()}${msg()}`;
+}
+
+function adviceTable(b) {
+  if (!b.skills || !b.skills.length) return '<p class="mut">No skills evaluated yet.</p>';
+  return `<table><tr><th>Skill</th><th>Score</th><th>Band</th><th>What to study</th></tr>${b.skills.map(s => {
+    const v = s.after ?? s.before, bd = band(v);
+    return `<tr><td>${skillLink(s.skill)}${s.target ? ' <span class="target">target</span>' : ''}</td>
+      <td>${pct(s.before)}${s.after == null ? '' : ' → ' + pct(s.after)}</td>
+      <td><span class="badge ${bd[1]}">${s.band}</span></td>
+      <td>${s.action}${s.missed && s.missed.length ? `<br><small class="mut">Redo: ${s.missed.join(', ')}</small>` : ''}${s.resource ? `<br><small class="mut">Lesson: ${s.resource}</small>` : ''}</td></tr>`;
+  }).join('')}</table>`;
+}
+
+function battle() {
+  const its = S.items, n = its.length, m = S.module;
+  const it = its.find(x => !x.done);
+  if (!it) return `<section class="panel arena"><h2>All questions visited</h2>
+    <p>Submit the battle to save your results.</p>
+    <button class="cta" data-act="finish">Submit battle</button></section>${msg()}`;
+  const answered = FB && FB.item === it.id;
+  const left = its.filter(x => !x.done).length;
+  const opts = Object.entries(it.options).map(([L, t]) =>
+    `<button class="opt o${L} ${answered && FB.letter === L ? 'picked' : ''}" data-act="ans" data-l="${L}" ${answered ? 'disabled' : ''}><b>${L}</b><span>${t}</span></button>`).join('');
+  let pop = '';
+  if (answered) pop = FB.correct === null ? '<p class="pop">Skipped. No damage dealt.</p>'
+    : FB.correct ? '<p class="pop hit">HIT!</p>' : `<p class="pop miss"><b>Miss.</b> ${HINT[it.cat]}</p>`;
+  const act = answered ? '<button class="cta" data-act="next">Next question</button>' : '<button class="g" data-act="skip">Skip</button>';
+  return `<section class="panel arena">
+    <div class="rowb"><span><b>Chapter ${m + 1}</b>: ${S.modules[m].name}</span><span class="mut">Q${its.indexOf(it) + 1} of ${n}</span></div>
+    <div class="mon-big ${answered && FB.correct ? 'hurt' : ''}">${monIcon(m, true)}</div>
+    <div class="hp"><i style="width:${left / n * 100}%"></i></div>
+    <p class="mut">Monster HP ${left} of ${n} · skill: ${skillLink(it.skill)}</p>
+    ${S.progress ? `<p class="mut">Answered ${S.progress.answered} of ${S.progress.total} · ${S.progress.needed} needed to submit</p>` : ''}
+    <h2 class="stem">${it.stem}</h2>${opts}
+    <div class="rowb">${pop}${act}</div></section>${msg()}`;
+}
+
+function renderTutorMenu() {
+  const menu = document.getElementById('tutorMenu');
+  if (!menu) return;
+  if (!TUTOR_DROPDOWN_OPEN) {
+    menu.hidden = true;
+    return;
+  }
+  
+  const term = TUTOR_SEARCH.toLowerCase();
+  const filtered = TUT.filter(t => t.name.toLowerCase().includes(term));
+  
+  let html = `<div class="search-select-item ${TUTOR_SELECTED_ID === null || TUTOR_SELECTED_ID === '' ? 'active' : ''}" data-act="tutor" data-id="">Study alone</div>`;
+  if (filtered.length === 0) {
+    html += `<div class="search-select-empty">No tutors found</div>`;
+  } else {
+    html += filtered.map(t => 
+      `<div class="search-select-item ${TUTOR_SELECTED_ID === t.id ? 'active' : ''}" data-act="tutor" data-id="${t.id}">${esc(t.name)}</div>`
+    ).join('');
+  }
+  menu.innerHTML = html;
+  menu.hidden = false;
+}
+
+function msg() { return MSG ? `<p class="msg">${esc(MSG)}</p>` : ''; }
+
+let CHAT = null;
+let CHAT_STEP = 0;
+let CHAT_SIM = 0;
+let CHAT_HISTORY = {};
+let CHAT_ANSWER = null;
+let CHAT_DONE = false;
+let SEL_TAB = 'chat';
+let BOSS_VIEW = false;
+let BOSS_DIAG = null;
+let advTimer = null;
+let PRACTICE = null;
+let PRACTICE_STEP = 0;
+let PRACTICE_FB = null;
+let PRACTICE_SCORE = 0;
+
+function clearAdv() { if (advTimer) { clearTimeout(advTimer); advTimer = null; } }
+function clearChat() { clearAdv(); CHAT = null; CHAT_STEP = 0; CHAT_SIM = 0; CHAT_HISTORY = {}; CHAT_ANSWER = null; CHAT_DONE = false; PRACTICE = null; }
+
+function bubbleByte(text) {
+  return `<div class="chat-row">
+    <div class="chat-ava"><img src="/static/robot.png" alt="Byte" onerror="this.outerHTML='🤖'"></div>
+    <div class="chat-bubble"><span class="byte-name">Byte</span>${esc(text)}</div></div>`;
+}
+function bubbleUser(text) {
+  return `<div class="chat-row user">
+    <div class="chat-ava">${esc(ME && ME.avatar ? ME.avatar : '🧑')}</div>
+    <div class="chat-bubble">${esc(text)}</div></div>`;
+}
+function bubbleCard(title, body) {
+  return `<div class="chat-row card">
+    <div class="chat-ava"><img src="/static/robot.png" alt="Byte" onerror="this.outerHTML='🤖'"></div>
+    <div class="chat-bubble"><div class="card-title">📘 ${esc(title)}</div><div class="card-body">${esc(body)}</div></div></div>`;
+}
+function bubbleSim(turn, revealed) {
+  const steps = turn.steps.slice(0, revealed).map((s, i) => `
+    <div class="sim-step"><div class="s-num">${i + 1}</div>
+    <div class="s-body">${esc(s.text)}<span class="s-math">${esc(s.math)}</span></div></div>`).join('');
+  return `<div class="chat-row sim">
+    <div class="chat-ava"><img src="/static/robot.png" alt="Byte" onerror="this.outerHTML='🤖'"></div>
+    <div class="chat-bubble"><div class="sim-box">
+      <div class="sim-title">🧪 ${esc(turn.title)}</div>
+      <div class="sim-prompt">${esc(turn.prompt)}</div>${steps}
+    </div></div></div>`;
+}
+function bubbleAskAnswered(turn, userText) {
+  return bubbleUser(userText) + bubbleByte(turn.reply || '✓');
+}
+function bubbleAskActive(turn, state) {
+  const hasOptions = turn.options && turn.options.length > 0;
+  const opts = hasOptions ? turn.options.map(o => {
+    let cls = 'ask-opt';
+    if (state && state.chosen === o) cls += state.correct ? ' correct' : ' wrong';
+    return `<button class="${cls}" data-act="chatans" data-opt="${esc(o)}">${esc(o)}</button>`;
+  }).join('') : '';
+  const hint = state && state.wrong
+    ? `<div class="ask-hint">💡 ${esc(turn.hint || 'Not quite — try again.')}</div>` : '';
+  return `<div class="chat-row ask">
+    <div class="chat-ava"><img src="/static/robot.png" alt="Byte" onerror="this.outerHTML='🤖'"></div>
+    <div class="chat-bubble">
+      <div class="ask-prompt">❓ ${esc(turn.prompt)}</div>
+      ${hasOptions ? `<div class="ask-opts">${opts}</div>` : ''}
+      <form class="ask-input" data-act="chatansform">
+        <input type="text" id="chatInput" placeholder="${hasOptions ? 'or type your answer…' : 'Type your answer…'}" autocomplete="off">
+        <button type="submit">Send</button>
+      </form>
+      ${hint}
+    </div></div>`;
+}
+
+async function openLessonChat(m) {
+  clearChat();
+  CHAT = await api('GET', '/api/student/lesson/' + m);
+  CHAT_STEP = 0;
+  SEL_TAB = 'chat';
+  if (CHAT.progress && CHAT.progress.lesson_done) {
+    CHAT_STEP = CHAT.turns.length;
+    CHAT_DONE = true;
+  }
+}
+
+function checkAnswer(turn, text) {
+  if (!text) return false;
+  const t = text.trim().toLowerCase();
+  if (turn.correct && t === turn.correct.trim().toLowerCase()) return true;
+  if (turn.accept) {
+    for (const a of turn.accept) {
+      const al = a.toLowerCase();
+      if (t === al) return true;
+      if (t.includes(al)) return true;
+    }
+  }
+  return false;
+}
+
+function renderChatBody(m, b) {
+  if (!CHAT || CHAT.module !== m) return '<p class="mut">Loading lesson…</p>';
+  const turns = CHAT.turns;
+
+  let html = '<div class="chat-wrap">';
+  for (let i = 0; i < CHAT_STEP; i++) {
+    const t = turns[i];
+    if (t.from === 'byte') html += bubbleByte(t.text);
+    else if (t.from === 'card') html += bubbleCard(t.title, t.body);
+    else if (t.from === 'sim') html += bubbleSim(t, t.steps.length);
+    else if (t.from === 'ask') html += bubbleAskAnswered(t, CHAT_HISTORY[i] || t.correct || '✓');
+  }
+
+  let needsAdvance = null;
+  if (CHAT_STEP < turns.length) {
+    const t = turns[CHAT_STEP];
+    if (t.from === 'byte') {
+      html += bubbleByte(t.text);
+      needsAdvance = 700;
+    } else if (t.from === 'card') {
+      html += bubbleCard(t.title, t.body);
+      needsAdvance = 900;
+    } else if (t.from === 'sim') {
+      html += bubbleSim(t, CHAT_SIM);
+      if (CHAT_SIM < t.steps.length) needsAdvance = 650;
+      else needsAdvance = 900;
+    } else if (t.from === 'ask') {
+      if (CHAT_ANSWER && CHAT_ANSWER.correct) {
+        html += bubbleAskAnswered(t, CHAT_ANSWER.text);
+        needsAdvance = 1200;
+      } else {
+        html += bubbleAskActive(t, CHAT_ANSWER);
+      }
+    }
+  } else {
+    if (!CHAT_DONE) {
+      html += `<div class="chat-done">🎉 Lesson complete!</div>`;
+      html += `<div style="text-align:center; margin-top:20px;">
+        <button class="cta" data-act="chatfinish" style="width:100%; max-width:400px; font-size:18px; padding:14px;">🏁 Mark as finished & unlock test</button>
+      </div>`;
+    } else {
+      html += `<div class="chat-done">✓ Lesson finished — head to the Test tab!</div>`;
+    }
+  }
+  html += '</div>';
+
+  html += `<div class="row" style="margin-top:14px;justify-content:space-between">
+    <button class="g" data-act="back">← Map</button>
+    <button class="${CHAT_DONE ? 'cta' : 'g'}" data-act="tab" data-tab="test"
+      ${CHAT_DONE ? '' : 'disabled'}>⚔ Module Test →</button>
+  </div>`;
+
+  if (needsAdvance !== null) {
+    clearAdv();
+    setTimeout(() => {
+      if (!CHAT) return;
+      if (advTimer) return;
+      advTimer = setTimeout(() => {
+        advTimer = null;
+        if (!CHAT) return;
+        const cur = CHAT.turns[CHAT_STEP];
+        if (!cur) return;
+        if (cur.from === 'byte' || cur.from === 'card') { CHAT_STEP++; render(); }
+        else if (cur.from === 'sim') {
+          if (CHAT_SIM < cur.steps.length) { CHAT_SIM++; render(); }
+          else { CHAT_STEP++; CHAT_SIM = 0; render(); }
+        } else if (cur.from === 'ask' && CHAT_ANSWER && CHAT_ANSWER.correct) {
+          CHAT_HISTORY[CHAT_STEP] = CHAT_ANSWER.text;
+          CHAT_STEP++; CHAT_SIM = 0; CHAT_ANSWER = null;
+          render();
+        }
+      }, needsAdvance);
+    }, 30);
+  }
+  return html;
+}
+
+function renderTestTab(m, b) {
+  // Fix 16: Removed the strict CHAT_DONE gate. The server only requires the previous pretest to be submitted.
+  let action = '';
+  let evalSection = '';
+  
+  if (b.pretest === 'none') {
+    action = `<p>Chapter ${m + 1} has 10 questions about ${esc(b.name)}. Answer, skip, or leave any question.</p>
+      <button class="cta" data-act="start" data-kind="pretest" data-m="${m}" style="width:100%">⚔ Start chapter battle</button>`;
+  } else if (b.targets && b.targets.length > 0) {
+    evalSection = `<h3>Your evaluation</h3>${adviceTable(b)}`;
+    action = `<h3>Targeted retest</h3><p>Battle only the questions for <b>${esc(b.targets.join(' and '))}</b>.</p>
+      <button class="cta" data-act="start" data-kind="retest" data-m="${m}" style="width:100%">⚔ Start retest battle</button>`;
+    if (b.retest === 'submitted') {
+      action = `<p class="msg">You've already taken a retest, but you can try again to improve further!</p>` + action;
+    }
+  } else {
+    evalSection = `<h3>Your evaluation</h3>${adviceTable(b)}`;
+    action = '<p class="msg">No skill in this chapter needs retaking. You have mastered them all!</p>';
+  }
+  
+  const practiceBtn = `<div style="margin-top:16px; border-top:2px dashed var(--line); padding-top:16px;">
+    <p class="mut">Want to practice without saving a score? Try Practice Mode.</p>
+    <button class="g" data-act="practice" data-m="${m}" style="width:100%">🧪 Practice Mode (Unscored)</button>
+  </div>`;
+
+  return `${evalSection}${action}${practiceBtn}`;
+}
+
+function practiceScreen(m) {
+  if (!PRACTICE) return '<section class="panel"><p>Loading…</p></section>';
+  if (PRACTICE_STEP >= PRACTICE.items.length) {
+    return `<section class="panel arena">
+      <h2>Practice Complete!</h2>
+      <p>You scored ${PRACTICE_SCORE} out of ${PRACTICE.items.length}.</p>
+      <div class="row"><button class="g" data-act="tab" data-tab="test">← Back to Test Tab</button>
+      <button class="cta" data-act="back">Go to Map</button></div>
+    </section>`;
+  }
+  const it = PRACTICE.items[PRACTICE_STEP];
+  const answered = PRACTICE_FB !== null;
+  const opts = Object.entries(it.options).map(([L, t]) =>
+    `<button class="opt o${L} ${answered && PRACTICE_FB.letter === L ? 'picked' : ''}" data-act="pracans" data-l="${L}" ${answered ? 'disabled' : ''}><b>${L}</b><span>${esc(t)}</span></button>`).join('');
+  let pop = '';
+  if (answered) {
+    pop = PRACTICE_FB.correct ? '<p class="pop hit">Correct!</p>' : `<p class="pop miss"><b>Miss.</b> Review this skill in the lesson.</p>`;
+  }
+  return `<section class="panel arena">
+    <button class="g" data-act="tab" data-tab="test" style="margin-bottom: 14px;">← Back to Module</button>
+    <div class="rowb"><span><b>Practice Mode</b>: Chapter ${m+1}</span><span class="mut">Q${PRACTICE_STEP+1} of ${PRACTICE.items.length}</span></div>
+    <div class="mon-big">${monIcon(m, true)}</div>
+    <p class="mut">Unscored practice · skill: ${skillLink(it.skill)}</p>
+    <h2 class="stem">${esc(it.stem)}</h2>${opts}
+    <div class="rowb">${pop}${answered ? '<button class="cta" data-act="pracnext">Next</button>' : ''}</div>
+  </section>`;
+}
+
+function modScreen(m) {
+  const b = S.modules[m];
+  const tabs = `<div class="lesson-tabs">
+    <button data-act="tab" data-tab="chat" class="${SEL_TAB==='chat'?'on':''} ${CHAT_DONE?'done':''}">💬 Learn with Byte</button>
+    <button data-act="tab" data-tab="test" class="${SEL_TAB==='test'?'on':''}">⚔ Module Test</button>
+  </div>`;
+  const body = SEL_TAB === 'test' ? renderTestTab(m, b) : renderChatBody(m, b);
+  return `<section class="panel"><button class="g" data-act="back">← Map</button>
+    <h2>Chapter ${m + 1}: ${esc(b.name)}</h2>${tabs}${body}</section>${msg()}`;
+}
+
+function bossScreen() {
+  const LT = S.long_test || {};
+  const at = LT.attempt;
+  if (!at) {
+    if (LT.last) return bossDiagnostic();
+    return `<section class="panel"><button class="g" data-act="back">← Map</button>
+      <h2>Final Boss</h2><p class="mut">No long test in progress.</p></section>`;
+  }
+  const its = at.items;
+  const n = its.length;
+  const it = its.find(x => !x.done);
+  if (!it) return `<section class="panel arena"><button class="g" data-act="back">← Map</button>
+    <h2>👹 The Boss is wounded!</h2><p>Submit the Long Test.</p>
+    <button class="cta" data-act="bossfinish" style="width:100%">Submit Long Test</button></section>${msg()}`;
+  const answered = FB && FB.item === it.id;
+  const left = its.filter(x => !x.done).length;
+  const opts = Object.entries(it.options).map(([L, t]) =>
+    `<button class="opt o${L} ${answered && FB.letter === L ? 'picked' : ''}" data-act="bossans" data-l="${L}" ${answered ? 'disabled' : ''}><b>${L}</b><span>${esc(t)}</span></button>`).join('');
+  let pop = '';
+  if (answered) pop = FB.correct === null ? '<p class="pop">Skipped.</p>'
+    : FB.correct ? '<p class="pop hit">HIT!</p>' : `<p class="pop miss"><b>Miss.</b> ${HINT[it.cat]}</p>`;
+  const act = answered ? '<button class="cta" data-act="bossnext">Next</button>' : '<button class="g" data-act="bossskip">Skip</button>';
+  return `<section class="panel arena">
+    <div class="rowb"><span><b>👹 FINAL BOSS</b> · ${at.scope === 'weak' ? 'Rematch' : 'Full'}</span>
+    <span class="mut">Q${its.indexOf(it) + 1} of ${n}</span></div>
+    <div class="mon-big ${answered && FB.correct ? 'hurt' : ''}" style="font-size:96px">👹</div>
+    <div class="hp"><i style="width:${left / n * 100}%"></i></div>
+    <p class="mut">Boss HP ${left} of ${n} · skill: ${skillLink(it.skill)}</p>
+    <h2 class="stem">${esc(it.stem)}</h2>${opts}
+    <div class="rowb">${pop}${act}</div></section>${msg()}`;
+}
+
+function bossDiagnostic() {
+  const LT = S.long_test || {};
+  if (!BOSS_DIAG) {
+    api('GET', '/api/student/longtest').then(j => { BOSS_DIAG = j; render(); });
+    return '<section class="panel"><p class="mut">Loading…</p></section>';
+  }
+  const d = BOSS_DIAG.last;
+  if (!d) return '<p class="mut">No diagnostic yet.</p>';
+  const perfect = d.correct === d.administered;
+  return `<section class="panel"><button class="g" data-act="back">← Map</button>
+    <h2>${perfect ? '🏆 FINAL BOSS DEFEATED' : '👹 Final Boss — Try Again'}</h2>
+    <p class="mut">${d.correct}/${d.administered} correct · scope: ${d.scope}</p>
+    <div class="diag-grid">
+      <div class="diag-card"><small>Score</small><b class="${perfect ? 'ok' : 'mid'}">${d.correct}/${d.administered}</b></div>
+      <div class="diag-card"><small>Scope</small><b>${d.scope}</b></div>
+    </div>
+    <div class="row"><a class="g" href="/demo" target="_blank" style="text-decoration:none;padding:10px 16px;border-radius:14px;background:var(--paper);border:3px solid var(--line);box-shadow:0 4px 0 var(--line);font-weight:700;color:var(--ink)">📊 Open Diagnostic</a>
+    ${!perfect ? '<button class="cta" data-act="boss" data-mode="start">⚔ Rematch</button>' : ''}
+    <button class="g" data-act="back">← Back</button></div></section>`;
+}
+
+function ratingPrompt() {
+  if (!pendingRating) return '';
+  const filled = n => n <= ratingStars ? 'on' : '';
+  const disabled = ratingStars === 0 ? 'disabled' : '';
+  return `<div class="modal-bg" data-act="closerating">
+    <div class="modal-card">
+      <h2>Rate your tutor</h2>
+      <p class="mut">How helpful was your tutor for this retest?</p>
+      <div class="star-picker" style="display:flex;gap:6px;margin:12px 0;justify-content:center">
+        ${[1,2,3,4,5].map(n =>
+          `<button type="button" class="${filled(n)}" data-act="starpick" data-n="${n}">★</button>`
+        ).join('')}
+      </div>
+      <label style="display:block;color:var(--mut);font-size:13px;font-weight:700">Comment (optional)</label>
+      <textarea id="rateComment" rows="3" maxlength="500" style="width:100%;box-sizing:border-box;margin-top:4px;padding:10px;border-radius:12px;border:3px solid var(--line);background:var(--paper);color:var(--ink);font:16px system-ui"></textarea>
+      <p class="err" id="rateErr"></p>
+      <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px">
+        <button class="g" data-act="closerating">Skip</button>
+        <button class="cta" data-act="submitrating" id="rateSubmit" ${disabled}>Submit rating</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+function renderModals() {
+  const wrap = document.getElementById('profileModal');
+  if (!wrap) return;
+  if (pendingRating) {
+    wrap.innerHTML = ratingPrompt();
+  } else if (CONFIRM) {
+    wrap.innerHTML = `
+      <div class="modal-bg" data-act="closeconfirm">
+        <div class="confirm-box">
+          <h3>${esc(CONFIRM.title)}</h3>
+          <p>${esc(CONFIRM.msg)}</p>
+          <div class="row">
+            <button class="g" data-act="closeconfirm">${esc(CONFIRM.noText || 'Cancel')}</button>
+            ${CONFIRM.onYes ? `<button class="cta" data-act="yesconfirm">${esc(CONFIRM.yesText || 'Confirm')}</button>` : ''}
+          </div>
+        </div>
+      </div>`;
+  } else if (EDIT_OPEN) {
+    renderEditProfile();
+  } else {
+    wrap.innerHTML = '';
+  }
+}
+
+function render() {
+  $('login').hidden = !!ME;
+  $('hud').hidden = !ME;
+  if (!ME) { $('view').innerHTML = ''; renderModals(); return; }
+  if (!S) { $('view').innerHTML = '<p class="mut">Loading…</p>'; renderModals(); return; }
+  $('pname').textContent = ME.name;
+  
+  $('pavatar').innerHTML = `<span style="font-size:28px;line-height:1;display:grid;place-items:center;">${esc(ME.avatar || '🎓')}</span>`;
+
+  $('plvl').textContent = `· ${S.cleared} of 10 chapters cleared`;
+  $('xpbar').style.width = (S.cleared * 10) + '%';
+  
+  // Update the Tutor Input Value in the HUD based on local selection
+  const tutorInput = $('tutorSearch');
+  const tutorMenu = $('tutorMenu');
+  if (tutorInput && !TUTOR_DROPDOWN_OPEN) {
+    const currentTut = TUT.find(t => t.id === TUTOR_SELECTED_ID);
+    tutorInput.value = currentTut ? currentTut.name : 'Study alone';
+    if (tutorMenu) tutorMenu.hidden = true;
+  }
+
+  if (S.attempt) $('view').innerHTML = battle();
+  else if (BOSS_VIEW) $('view').innerHTML = bossScreen();
+  else if (SEL !== null) {
+    if (SEL_TAB === 'practice') $('view').innerHTML = practiceScreen(SEL);
+    else $('view').innerHTML = modScreen(SEL);
+  }
+  else $('view').innerHTML = mapScreen();
+  MSG = '';
+  renderModals();
+}
+
+function doConfirm(title, msg, onYes, yesText = 'Confirm', noText = 'Cancel') {
+  CONFIRM = { title, msg, onYes, yesText, noText };
+  render();
+}
+function closeConfirm() { CONFIRM = null; render(); }
+function showGlossary(skill) {
+  const def = GLOSSARY[skill] || 'No definition available.';
+  doConfirm('Skill Glossary', `${skill}\n\n${def}`, null, '', 'Close');
+}
+
+function currentItem() { return (S && S.items) ? S.items.find(x => !x.done) : null; }
+function bossItem()    { const a = S && S.long_test && S.long_test.attempt; return a ? a.items.find(x => !x.done) : null; }
+
+async function openModule(m) {
+  if (!moduleUnlocked(m)) { MSG = 'Finish the previous chapter first.'; render(); return; }
+  SEL = m; SEL_TAB = 'chat'; BOSS_VIEW = false; BOSS_DIAG = null;
+  clearChat();
+  render();
+  try { await openLessonChat(m); }
+  catch (e) { MSG = e.message; }
+  render();
+}
+
+async function startBattle(kind, m) {
+  if (kind === 'retest') {
+    doConfirm('Retake Chapter Test?', 'This will start a new retest for Chapter ' + (m+1) + '. Your previous score will be saved in history.', () => {
+      CONFIRM = null;
+      _doStartBattle(kind, m);
+    });
+  } else {
+    _doStartBattle(kind, m);
+  }
+}
+async function _doStartBattle(kind, m) {
+  try {
+    await api('POST', '/api/student/start', {module: m, kind});
+    FB = null;
+    await refresh();
+  } catch (e) { MSG = e.message; render(); }
+}
+
+async function startPractice(m) {
+  try {
+    const items = await api('GET', '/api/student/practice/' + m);
+    PRACTICE = { module: m, items };
+    PRACTICE_STEP = 0;
+    PRACTICE_FB = null;
+    PRACTICE_SCORE = 0;
+    SEL_TAB = 'practice';
+    render();
+  } catch (e) { MSG = e.message; render(); }
+}
+
+async function practiceAnswer(l) {
+  if (PRACTICE_FB) return;
+  const it = PRACTICE.items[PRACTICE_STEP];
+  try {
+    const j = await api('POST', '/api/student/practice/answer', {item: it.id, chosen: l});
+    if (j.correct) PRACTICE_SCORE++;
+    PRACTICE_FB = { letter: l, correct: j.correct };
+  } catch (e) { MSG = e.message; }
+  render();
+}
+function practiceNext() {
+  PRACTICE_FB = null;
+  PRACTICE_STEP++;
+  render();
+}
+
+async function doAnswer(letter) {
+  const it = currentItem(); if (!it) return;
+  try {
+    const j = await api('POST', '/api/student/answer', {item: it.id, letter});
+    FB = {item: it.id, letter, correct: typeof j.correct === 'boolean' ? j.correct : null};
+    if (j.progress && S) S.progress = j.progress;
+  } catch (e) { MSG = e.message; }
+  render();
+}
+
+async function doSkip() {
+  const it = currentItem(); if (!it) return;
+  try { const j = await api('POST', '/api/student/answer', {item: it.id, skip: true}); if (j.progress && S) S.progress = j.progress; }
+  catch (e) { MSG = e.message; }
+  FB = {item: it.id, letter: null, correct: null};
+  render();
+}
+
+async function doNext() {
+  FB = null;
+  try { await refresh(); }
+  catch (e) { MSG = e.message; render(); }
+}
+
+async function submitBattle() {
+  try {
+    const wasRetest = S.kind === 'retest';
+    const attemptId = S.attempt;
+    const hasTutor = !!S.tutor_id;
+    await api('POST', '/api/student/submit', {});
+    FB = null; SEL = null; clearChat();
+    MSG = 'Battle submitted ✓';
+    if (wasRetest && hasTutor && attemptId) {
+      pendingRating = attemptId;
+      ratingStars = 0;
+    }
+    await refresh();
+  } catch (e) { MSG = e.message; render(); }
+}
+
+async function setTutor(id) {
+  try {
+    await api('POST', '/api/student/tutor', {tutor_id: id || null});
+    MSG = id ? 'Tutor assigned ✓' : 'Now studying alone.';
+    TUTOR_DROPDOWN_OPEN = false;
+    TUTOR_SEARCH = '';
+    await refresh();
+  } catch (e) { MSG = e.message; render(); }
+}
+
+function chatAnswer(text) {
+  if (!CHAT) return;
+  const t = CHAT.turns[CHAT_STEP];
+  if (!t || t.from !== 'ask') return;
+  const ok = checkAnswer(t, text);
+  CHAT_ANSWER = {text, correct: ok, chosen: text, wrong: !ok};
+  render();
+}
+
+async function finishLesson() {
+  CHAT_DONE = true;
+  MSG = 'Lesson finished ✓ Test unlocked!';
+  render();
+  
+  try {
+    await api('POST', '/api/student/lesson/mark', {module: SEL, section: 'lesson'});
+    await refresh();
+  } catch (e) { 
+    console.warn("Failed to sync lesson progress:", e); 
+  }
+}
+
+async function openBoss(mode) {
+  BOSS_DIAG = null; FB = null;
+  if (mode === 'view')  { BOSS_VIEW = true; render(); return; }
+  if (mode === 'battle'){ BOSS_VIEW = true; render(); return; }
+  try {
+    await api('POST', '/api/student/longtest/start', {scope: 'full'});
+    BOSS_VIEW = true;
+    await refresh();
+  } catch (e) { MSG = e.message; render(); }
+}
+
+async function bossAnswer(letter) {
+  const it = bossItem(); if (!it) return;
+  try {
+    const j = await api('POST', '/api/student/longtest/answer', {item: it.id, letter});
+    FB = {item: it.id, letter, correct: typeof j.correct === 'boolean' ? j.correct : null};
+  } catch (e) { MSG = e.message; }
+  render();
+}
+
+async function bossSkip() {
+  const it = bossItem(); if (!it) return;
+  try { await api('POST', '/api/student/longtest/answer', {item: it.id, skip: true}); }
+  catch (e) { MSG = e.message; }
+  FB = {item: it.id, letter: null, correct: null};
+  render();
+}
+
+async function bossNext() {
+  FB = null;
+  try { await refresh(); }
+  catch (e) { MSG = e.message; render(); }
+}
+
+async function bossFinish() {
+  try {
+    await api('POST', '/api/student/longtest/submit', {});
+    FB = null; BOSS_DIAG = null; BOSS_VIEW = true;
+    MSG = 'Long Test submitted ✓';
+    await refresh();
+  } catch (e) { MSG = e.message; render(); }
+}
+
+// Global focus and typing events for the search dropdown
+document.addEventListener('focusin', e => {
+  if (e.target.id === 'tutorSearch') {
+    if (!TUTOR_DROPDOWN_OPEN) {
+      TUTOR_DROPDOWN_OPEN = true;
+      TUTOR_SEARCH = '';
+      e.target.value = ''; // clear to allow instant typing
+      renderTutorMenu();
+    }
+  }
+});
+
+document.addEventListener('input', e => {
+  if (e.target.id === 'tutorSearch') {
+    TUTOR_SEARCH = e.target.value;
+    renderTutorMenu();
+  }
+});
+
+document.addEventListener('keydown', e => {
+  if (e.target.id === 'tutorSearch') {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      const term = TUTOR_SEARCH.toLowerCase();
+      const filtered = TUT.filter(t => t.name.toLowerCase().includes(term));
+      if (filtered.length > 0) {
+        TUTOR_SELECTED_ID = filtered[0].id;
+      } else if (term === 'study alone') {
+        TUTOR_SELECTED_ID = null;
+      }
+      TUTOR_DROPDOWN_OPEN = false;
+      TUTOR_SEARCH = '';
+      render();
+    } else if (e.key === 'Escape') {
+      TUTOR_DROPDOWN_OPEN = false;
+      render();
+    }
+  }
+});
+
+document.addEventListener('click', async (ev) => {
+  const el = ev.target.closest('[data-act]');
+  
+  // Close dropdown if clicking outside
+  const isClickInsideSearch = ev.target.closest('.search-select-wrap');
+  if (!el && !isClickInsideSearch && TUTOR_DROPDOWN_OPEN) {
+    TUTOR_DROPDOWN_OPEN = false;
+    render();
+    return;
+  }
+  
+  if (!el || el.disabled) return;
+  const act = el.dataset.act;
+
+  if (act === 'closemodal') { if (ev.target === el) closeEditProfile(); return; }
+  if (act === 'closeconfirm') { if (ev.target === el) closeConfirm(); return; }
+  if (act === 'closerating') { if (ev.target === el) { pendingRating = null; ratingStars = 0; render(); } return; }
+
+  switch (act) {
+    case 'theme':       toggleTheme();                                   return;
+    case 'demo':        await login(el.dataset.email, 'Demo1234');       return;
+    case 'editprofile': openEditProfile();                               return;
+    case 'logout':      logout();                                        return;
+    case 'deleteaccount': await deleteAccount();                         return;
+    case 'pickava':     PICKED_AVATAR = el.dataset.a; buildAvatarPicker(); return;
+    case 'editpickava': EDIT_AVATAR = el.dataset.a; renderEditProfile();  return;
+    case 'closedit':    closeEditProfile();                              return;
+    case 'savedit':     await saveEditProfile();                         return;
+
+    case 'mod':         await openModule(+el.dataset.m);                 return;
+    case 'back':        SEL = null; BOSS_VIEW = false; BOSS_DIAG = null;
+                        FB = null; clearChat(); render();                return;
+    case 'tab':         SEL_TAB = el.dataset.tab; render();              return;
+    case 'start':       await startBattle(el.dataset.kind, +el.dataset.m); return;
+    case 'ans':         await doAnswer(el.dataset.l);                    return;
+    case 'skip':        await doSkip();                                  return;
+    case 'next':        await doNext();                                  return;
+    case 'finish':      await submitBattle();                            return;
+    
+    // Select tutor locally, do not save yet
+    case 'tutor':
+      TUTOR_SELECTED_ID = el.dataset.id || null;
+      TUTOR_DROPDOWN_OPEN = false;
+      TUTOR_SEARCH = '';
+      render();
+      return;
+
+    // Save the selected tutor
+    case 'assigntutor':
+      TUTOR_DROPDOWN_OPEN = false;
+      TUTOR_SEARCH = '';
+      renderTutorMenu(); // Hide it immediately
+      if (TUTOR_SELECTED_ID !== undefined) {
+        await setTutor(TUTOR_SELECTED_ID);
+      }
+      return;
+
+    case 'chatans':     chatAnswer(el.dataset.opt);                      return;
+    case 'chatfinish':  await finishLesson();                            return;
+
+    case 'boss':        await openBoss(el.dataset.mode);                 return;
+    case 'bossans':     await bossAnswer(el.dataset.l);                  return;
+    case 'bossskip':    await bossSkip();                                return;
+    case 'bossnext':    await bossNext();                                return;
+    case 'bossfinish':  await bossFinish();                              return;
+    
+    case 'practice':    await startPractice(+el.dataset.m);              return;
+    case 'pracans':     practiceAnswer(el.dataset.l);                    return;
+    case 'pracnext':    practiceNext();                                  return;
+    case 'glossary':    showGlossary(el.dataset.skill);                  return;
+    case 'yesconfirm':  if (CONFIRM && CONFIRM.onYes) CONFIRM.onYes();   return;
+    
+    case 'starpick':    
+      ratingStars = +el.dataset.n; 
+      render();           
+      return;
+      
+    case 'submitrating': {
+      const errEl = document.getElementById('rateErr');
+      if (errEl) errEl.textContent = '';
+      try {
+        await api('POST', '/api/student/rate', {
+          retest_id: pendingRating,
+          stars: ratingStars,
+          comment: document.getElementById('rateComment').value
+        });
+        pendingRating = null; ratingStars = 0;
+        MSG = 'Thanks for your feedback!';
+        render();
+      } catch (e) {
+        if (errEl) errEl.textContent = e.message;
+      }
+      return;
+    }
+  }
+});
+
+document.addEventListener('submit', (ev) => {
+  const f = ev.target.closest('[data-act="chatansform"]');
+  if (!f) return;
+  ev.preventDefault();
+  const v = (f.querySelector('input')?.value || '').trim();
+  if (v) chatAnswer(v);
+});
+
+$('loginForm').addEventListener('submit', (ev) => {
+  ev.preventDefault();
+  login($('e').value.trim(), $('p').value);
+});
+
+$('signupForm').addEventListener('submit', async (ev) => {
+  ev.preventDefault();
+  const errEl = $('suErr'); errEl.textContent = '';
+  const name  = $('suName').value.trim();
+  const email = $('suEmail').value.trim();
+  const pass  = $('suPass').value;
+  const confirmPass = $('suConfirmPass').value;
+
+  if (name.length < 2)                { errEl.textContent = 'Please enter your name.'; return; }
+  if (!/^\S+@\S+\.\S+$/.test(email))  { errEl.textContent = 'Please enter a valid email.'; return; }
+  if (checkPasswordStrength(pass) < 3) { errEl.textContent = 'Password must be at least 8 characters with uppercase, lowercase, and a number.'; return; }
+  if (pass !== confirmPass)           { errEl.textContent = 'Passwords do not match.'; return; }
+
+  try {
+    const j = await api('POST', '/api/register', {name, email, password: pass, avatar: PICKED_AVATAR});
+    if (j.role && j.role !== 'student') { errEl.textContent = 'This quest is for students only.'; return; }
+    TOK = j.token; localStorage.setItem('sb_token', TOK); ME = j;
+    await refresh();
+    alert("Verification email sent! Check the server console for the link.");
+  } catch (err) { errEl.textContent = err.message; }
+});
+
+$('tabSignin').addEventListener('click', () => switchAuthTab('signin'));
+$('tabSignup').addEventListener('click', () => switchAuthTab('signup'));
+
+function toggleTheme() {
+  const next = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+  document.documentElement.dataset.theme = next;
+  try { localStorage.setItem('sb_theme', next); } catch (e) {}
+}
+
+let INTRO_SKIPPED = false;
+let INTRO_CLOSED  = false;
+
+function typeText(el, text, speed, done) {
+  el.textContent = '';
+  const cur = document.createElement('span');
+  cur.className = 'cursor';
+  el.appendChild(cur);
+  let i = 0;
+  (function tick() {
+    if (INTRO_SKIPPED || INTRO_CLOSED) { el.textContent = text; done && done(); return; }
+    if (i >= text.length) { cur.remove(); done && done(); return; }
+    cur.insertAdjacentText('beforebegin', text.charAt(i++));
+    setTimeout(tick, speed);
+  })();
+}
+
+function endIntro() {
+  if (INTRO_CLOSED) return;
+  INTRO_CLOSED = true;
+  const el = $('intro');
+  if (!el) return;
+  el.classList.add('leave');
+  setTimeout(() => el.remove(), 650);
+  const lg = $('login');
+  if (lg && !lg.hidden) lg.classList.add('reveal');
+}
+
+function runIntro() {
+  const bot = $('introBot');
+  if (bot) bot.classList.add('bob');
+  const T = $('introTitle'), L = $('introLine');
+
+  typeText(T, 'SkillBridge', 90, () => {
+    if (INTRO_SKIPPED || INTRO_CLOSED) return;
+    L.classList.add('show');
+    setTimeout(() => {
+      typeText(L, "Hi, I'm Byte! Let's level up your MMW skills — one chapter, one monster, one battle at a time.",
+        22, () => setTimeout(endIntro, 1800));
+    }, 250);
+  });
+}
+
+$('introSkip').addEventListener('click', () => { INTRO_SKIPPED = true; endIntro(); });
+
+async function boot() {
+  buildAvatarPicker();
+  render();
+  runIntro();
+
+  if (TOK) {
+    try {
+      const j = await api('GET', '/api/me');
+      if (j.role !== 'student') throw new Error('Not a student account.');
+      ME = j;
+      await refresh();
+    } catch (e) {
+      TOK = ''; ME = null; S = null;
+      localStorage.removeItem('sb_token');
+      render();
+    }
+  }
+}
+
+boot();
+</script>
+</body>
+</html>

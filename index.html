@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>SkillBridge</title>
+<script>
+(function () {
+  try {
+    var t = localStorage.getItem('sb_theme');
+    if (t !== 'light' && t !== 'dark') {
+      t = (window.matchMedia && window.matchMedia('(prefers-color-scheme:dark)').matches) ? 'dark' : 'light';
+    }
+    document.documentElement.dataset.theme = t;
+  } catch (e) { document.documentElement.dataset.theme = 'light'; }
+})();
+</script>
+<style>
+:root, [data-theme="light"]{
+  --ink:#1d2b53;--paper:#fff;--sky1:#7fd3ff;--sky2:#cdf3ff;
+  --gold:#ffb703;--gold2:#fb8500;--green:#2ec27e;--red:#ef476f;
+  --blue:#118ab2;--purple:#8e6cf0;--mut:#4b5a7a;--line:#1d2b53;
+  color-scheme:light;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+[data-theme="dark"]{
+  --ink:#f2f6ff;--paper:#1b2748;--sky1:#14204a;--sky2:#23325e;
+  --gold:#ffc94d;--gold2:#ff9e3d;--green:#4dd9a3;--red:#ff7a95;
+  --blue:#5fc7ea;--purple:#b8a4ff;--mut:#b9c6e6;--line:#0b1230;
+  color-scheme:dark;
+}
+html,body{height:100%}
+body{margin:0;color:var(--ink);font:16px/1.5 "Trebuchet MS","Segoe UI",system-ui,sans-serif;
+  background:url('/static/bg-lightmode.png') center/cover no-repeat fixed;
+  display:grid;place-items:center;overflow:hidden}
+[data-theme="dark"] body{background:url('/static/bg-darkmode.png') center/cover no-repeat fixed}
+
+#stage{display:grid;place-items:center;padding:24px;text-align:center;width:100%}
+
+/* ---------- Logo ---------- */
+.logo{cursor:pointer;user-select:none;display:grid;gap:14px;justify-items:center;transition:transform .25s;
+  border:0;background:transparent;padding:20px}
+.logo:hover{transform:scale(1.04)}
+.word{font:900 30px/1 "Arial Black","Trebuchet MS",sans-serif;letter-spacing:.06em;color:var(--ink)}
+.tag{color:var(--mut);font-size:14px}
+.hint{color:var(--gold);font-weight:900;letter-spacing:.14em;text-transform:uppercase;font-size:12px;
+  animation:pulse 1.8s infinite;margin-top:6px}
+@keyframes pulse{50%{opacity:.35}}
+
+/* ---------- Launch animation ---------- */
+@keyframes launch{
+  0%{transform:scale(1);filter:brightness(1)}
+  35%{transform:scale(1.18);filter:brightness(1.6)}
+  100%{transform:scale(3.4) translateY(-40px);opacity:0;filter:brightness(2.6)}
+}
+.logo.launch{animation:launch .95s cubic-bezier(.5,.05,.7,.2) forwards;pointer-events:none}
+
+/* ---------- Role picker ---------- */
+#choices{display:none;gap:18px;grid-template-columns:1fr;max-width:520px;width:100%;
+  opacity:0;transform:translateY(18px);transition:opacity .45s ease,transform .45s ease}
+#choices.in{opacity:1;transform:none}
+#choices h1{margin:0 0 6px;font-size:22px;font-family:"Arial Black","Trebuchet MS",sans-serif;color:var(--ink)}
+#choices p{margin:0 0 18px;color:var(--mut)}
+.choice{display:flex;align-items:center;gap:16px;padding:20px;border-radius:18px;text-decoration:none;
+  color:var(--ink);border:4px solid var(--line);background:var(--paper);font-weight:800;font-size:18px;
+  box-shadow:0 7px 0 var(--line);transition:transform .15s,box-shadow .15s}
+.choice:hover{transform:translateY(-3px);box-shadow:0 10px 0 var(--line)}
+.choice:active{transform:translateY(2px);box-shadow:0 3px 0 var(--line)}
+.choice .emo{font-size:38px;line-height:1}
+.choice small{display:block;font-weight:600;font-size:13px;color:var(--mut);margin-top:4px}
+.choice.student{border-color:var(--green)}
+.choice.tutor{border-color:var(--gold)}
+
+footer{position:fixed;bottom:14px;left:0;right:0;text-align:center;color:var(--mut);font-size:12px;padding:0 16px}
+
+/* ---------- Floating theme toggle ---------- */
+.theme-toggle{position:fixed;bottom:18px;right:18px;z-index:99;width:48px;height:48px;padding:0;font-size:22px;
+  line-height:1;border-radius:50%;display:grid;place-items:center;background:var(--paper);color:var(--ink);
+  border:3px solid var(--line);box-shadow:0 4px 0 var(--line);cursor:pointer;font-family:inherit}
+.theme-toggle::after{content:'🌙'}
+[data-theme="dark"] .theme-toggle::after{content:'☀️'}
+</style>
+</head>
+<body>
+<button class="theme-toggle" id="themeBtn" title="Switch light / dark" aria-label="Switch theme"></button>
+
+<div id="stage">
+  <button class="logo" id="logo" aria-label="Launch SkillBridge">
+    <img src="/static/logo.png" alt="SkillBridge Logo" style="width:160px; height:auto; border-radius:28px; border:4px solid var(--line); box-shadow:0 8px 0 var(--line), 0 18px 40px rgba(0,0,0,.25);">
+    <div class="word">SKILLBRIDGE</div>
+    <div class="tag">MMW assessment · retest · tutor insight</div>
+    <div class="hint">Tap the logo to begin</div>
+  </button>
+
+  <div id="choices">
+    <div>
+      <h1>Who is signing in?</h1>
+      <p>Pick your path — each one has its own sign-in.</p>
+    </div>
+    <a class="choice student" href="/game">
+      <span class="emo">🧑‍🎓</span>
+      <span>Student<small>Enter the MMW quest — Byte will guide you.</small></span>
+    </a>
+    <a class="choice tutor" href="/dashboard">
+      <span class="emo">🧑‍🏫</span>
+      <span>Tutor / Teacher<small>Formal staff sign-in for tutors, teachers and admins.</small></span>
+    </a>
+  </div>
+</div>
+
+<footer>Admins sign in on the Tutor / Teacher page. Accounts are issued by the system owner from the server console.</footer>
+
+<script>
+const logo = document.getElementById('logo');
+const choices = document.getElementById('choices');
+let opened = false;
+
+function reveal() {
+  if (opened) return;
+  opened = true;
+  logo.classList.add('launch');
+  setTimeout(() => {
+    logo.style.display = 'none';
+    choices.style.display = 'grid';
+    requestAnimationFrame(() => choices.classList.add('in'));
+  }, 900);
+}
+
+logo.addEventListener('click', reveal);
+
+document.getElementById('themeBtn').addEventListener('click', () => {
+  const next = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+  document.documentElement.dataset.theme = next;
+  try { localStorage.setItem('sb_theme', next); } catch (e) {}
+});
+
+/* Clicking a role card starts a fresh session, so clear any old login first. */
+document.querySelectorAll('.choice').forEach(el => {
+  el.addEventListener('click', () => {
+    try {
+      localStorage.removeItem('sb_token');   // student session
+      localStorage.removeItem('sb_staff');   // tutor / admin session
+    } catch (e) {}
+  });
+});
+</script>
+</body>
+</html>

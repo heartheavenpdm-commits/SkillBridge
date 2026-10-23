@@ -1,0 +1,1342 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>SkillBridge · Staff/Tutor dashboard</title>
+<script>
+(function () {
+  try {
+    var t = localStorage.getItem('sb_theme');
+    if (t !== 'light' && t !== 'dark') {
+      t = (window.matchMedia && window.matchMedia('(prefers-color-scheme:dark)').matches) ? 'dark' : 'light';
+    }
+    document.documentElement.dataset.theme = t;
+  } catch (e) { document.documentElement.dataset.theme = 'light'; }
+})();
+</script>
+<style>
+[hidden]{display:none!important}
+:root, [data-theme="light"]{
+  --bg:#f4f6f9;--card:#ffffff;--ink:#1d2430;--mut:#5b6677;--line:#dfe4ec;
+  --navy:#1f3350;--acc:#1f5fa8;--ok:#1e7a4c;--mid:#9a6200;--hi:#a12b2b;
+  --row:#f6f8fb;--sel:#e9f0fa;
+  color-scheme:light;box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+}
+[data-theme="dark"]{
+  --bg:#0f1520;--card:#172030;--ink:#e6ebf3;--mut:#9aa7ba;--line:#2a3646;
+  --navy:#0b1729;--acc:#7fb2ff;--ok:#7fd3a3;--mid:#f0c060;--hi:#ff9b9b;
+  --row:#1c2838;--sel:#22344d;
+  color-scheme:dark;
+}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;display:flex;flex-direction:column;min-height:100vh}
+header{background:var(--navy);color:#fff;padding:12px 20px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;flex-shrink:0}
+header b{font-size:16px;font-weight:600}
+main{flex:1;display:flex;flex-direction:column;overflow:hidden;width:100%;padding:0;max-width:none;margin:0}
+
+/* =========================================
+   PROFESSIONAL LOGIN PAGE
+   ========================================= */
+#login-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 20px;
+  background: radial-gradient(circle at 50% 0%, var(--sel) 0%, var(--bg) 70%);
+}
+
+#login{
+  width: 100%;
+  max-width: 420px;
+  padding: 40px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.08), 0 1px 3px rgba(0,0,0,0.05);
+  box-sizing: border-box;
+}
+
+.login-brand {
+  text-align: center;
+  margin-bottom: 30px;
+}
+.login-brand h1 {
+  margin: 0 0 8px 0;
+  font-size: 24px;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+  color: var(--navy);
+}
+[data-theme="dark"] .login-brand h1 { color: var(--ink); }
+.login-brand p {
+  margin: 0;
+  color: var(--mut);
+  font-size: 14px;
+}
+
+.auth-tabs {
+  display: flex;
+  background: var(--row);
+  border-radius: 8px;
+  padding: 4px;
+  margin-bottom: 24px;
+}
+.auth-tabs button {
+  flex: 1;
+  background: transparent;
+  border: 0;
+  padding: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--mut);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.auth-tabs button.on {
+  background: var(--card);
+  color: var(--acc);
+  box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+}
+
+/* Inputs */
+label {
+  display: block;
+  margin-top: 16px;
+  margin-bottom: 6px;
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 600;
+}
+input, select, textarea {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  font: inherit;
+  background: var(--card);
+  color: var(--ink);
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+input:focus, select:focus, textarea:focus {
+  outline: none;
+  border-color: var(--acc);
+  box-shadow: 0 0 0 3px rgba(31, 95, 168, 0.15);
+}
+[data-theme="dark"] input:focus, [data-theme="dark"] select:focus, [data-theme="dark"] textarea:focus {
+  box-shadow: 0 0 0 3px rgba(127, 178, 255, 0.15);
+}
+
+/* Primary Button */
+button[type="submit"] {
+  width: 100%;
+  margin-top: 24px;
+  padding: 12px;
+  background: var(--acc);
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.1s;
+}
+button[type="submit"]:hover {
+  background: var(--navy);
+}
+button[type="submit"]:active {
+  transform: translateY(1px);
+}
+
+/* Error Message */
+.err {
+  color: var(--hi);
+  font-size: 13px;
+  font-weight: 600;
+  min-height: 1.2em;
+  margin: 12px 0 0 0;
+  text-align: center;
+}
+
+.login-footer {
+  text-align: center;
+  margin-top: 24px;
+  font-size: 13px;
+}
+.login-footer a {
+  color: var(--mut);
+  text-decoration: none;
+  font-weight: 600;
+  transition: color 0.2s;
+}
+.login-footer a:hover {
+  color: var(--acc);
+}
+/* ========================================= */
+
+/* Dashboard Layout */
+.dashboard-container{display:flex;flex:1;overflow:hidden;width:100%;min-height:100vh}
+.sidebar{width:320px;background:var(--card);border-right:1px solid var(--line);padding:20px;overflow-y:auto;flex-shrink:0}
+.main-content{flex-grow:1;padding:24px;overflow-y:auto}
+
+.student-list{display:flex;flex-direction:column;gap:8px;margin-top:16px}
+.student-item{padding:12px;border-radius:6px;border:1px solid var(--line);cursor:pointer;background:var(--row);transition:background .2s}
+.student-item:hover{background:var(--sel)}
+.student-item.sel{background:var(--sel);border-color:var(--acc)}
+.student-item .s-name{font-weight:700;font-size:14px}
+.student-item .s-meta{font-size:12px;color:var(--mut);margin-top:4px;display:flex;justify-content:space-between}
+
+.sidebar-tabs{display:flex;flex-direction:column;gap:4px}
+.sidebar-tabs button{background:transparent;color:var(--mut);border:0;text-align:left;padding:10px 14px;border-radius:6px;font-weight:600;cursor:pointer}
+.sidebar-tabs button.on{background:var(--sel);color:var(--acc)}
+.sidebar-tabs button:hover:not(.on){background:var(--row);color:var(--ink)}
+
+.tutor-tabs{display:flex;gap:8px;margin-bottom:20px;border-bottom:1px solid var(--line);padding-bottom:8px}
+.tutor-tabs button{background:transparent;border:0;border-bottom:2px solid transparent;padding:8px 16px;cursor:pointer;font-weight:600;color:var(--mut)}
+.tutor-tabs button.on{border-bottom-color:var(--acc);color:var(--acc)}
+
+.card{background:var(--card);border:1px solid var(--line);border-radius:6px;padding:16px;margin-bottom:16px}
+h2{font-size:15px;margin:0 0 12px;font-weight:600}
+h3{font-size:14px;margin:14px 0 6px;font-weight:600}
+.muted{color:var(--mut)}
+table{width:100%;border-collapse:collapse}
+th{text-align:left;font-weight:600;color:var(--mut);font-size:12px;text-transform:uppercase;letter-spacing:.03em;padding:8px;border-bottom:1px solid var(--line)}
+td{padding:9px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+tbody tr:hover{background:var(--row)}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:16px}
+.kpi{background:var(--card);border:1px solid var(--line);border-radius:6px;padding:12px 14px}
+.kpi small{display:block;color:var(--mut);font-size:12px;text-transform:uppercase;letter-spacing:.03em}
+.kpi b{font-size:22px;font-weight:600}
+button{background:var(--acc);color:#fff;border:0;border-radius:4px;padding:8px 14px;font-size:14px;cursor:pointer}
+button.ghost{background:transparent;color:#fff;border:1px solid rgba(255,255,255,.5)}
+button.sm{padding:4px 10px;font-size:12px}
+button.danger{background:var(--hi)}
+button.off{background:#6b7280}
+
+.st-ok{color:var(--ok);font-weight:600}.st-mid{color:var(--mid);font-weight:600}.st-hi{color:var(--hi);font-weight:600}
+.note{font-size:12px;color:var(--mut);margin-top:12px}
+a.back{color:var(--mut);font-size:13px;text-decoration:none;font-weight:600}
+a.back:hover{color:var(--acc)}
+.theme-toggle{position:fixed;bottom:18px;right:18px;z-index:99;width:48px;height:48px;padding:0;font-size:22px;line-height:1;border-radius:50%;display:grid;place-items:center;background:var(--card);color:var(--ink);border:1px solid var(--line);box-shadow:0 4px 14px rgba(0,0,0,.18);cursor:pointer}
+.theme-toggle::after{content:'🌙'}
+[data-theme="dark"] .theme-toggle::after{content:'☀️'}
+
+.history-list{display:grid;gap:8px}
+.history-item{background:var(--row);border:1px solid var(--line);border-radius:6px;padding:10px 14px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.history-item .h-kind{font-size:11px;font-weight:900;border-radius:99px;padding:3px 10px;background:var(--acc);color:#fff}
+.history-item .h-kind.retest{background:var(--mid);color:#fff}
+.history-item .h-kind.longtest{background:#8b5cf6;color:#fff}
+.history-item .h-kind.inprog{background:var(--mut)}
+.history-item .h-name{flex:1;font-weight:700;min-width:140px}
+.history-item .h-date{font-size:12px;color:var(--mut);min-width:100px}
+.history-item .h-score{font-weight:900;font-family:ui-monospace,monospace}
+
+.coverage{background:var(--row);border:1px solid var(--line);border-radius:6px;padding:10px 14px;margin:10px 0;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.coverage .cov-bar{flex:1;min-width:140px;height:14px;border-radius:99px;background:rgba(0,0,0,.08);overflow:hidden;border:1px solid var(--line)}
+[data-theme="dark"] .coverage .cov-bar{background:rgba(255,255,255,.08)}
+.coverage .cov-bar i{display:block;height:100%;background:linear-gradient(90deg,var(--mid),var(--ok));transition:width .5s}
+
+.audit-row{display:grid;grid-template-columns:170px 1fr;gap:12px;padding:10px 0;border-bottom:1px solid var(--line)}
+.audit-row .a-when{color:var(--mut);font-size:12px}
+.audit-row .a-what{font-weight:700;font-family:ui-monospace,monospace;font-size:13px}
+.audit-row .a-body{color:var(--mut);font-size:12px;margin-top:2px;word-break:break-word}
+
+.tag-item{background:var(--row);border:1px solid var(--line);border-radius:6px;padding:14px;margin-bottom:10px}
+.tag-item .ti-head{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:8px}
+.tag-item .ti-id{font-family:ui-monospace,monospace;font-weight:900;color:var(--acc)}
+.tag-item .ti-skill{font-size:12px;color:var(--mut)}
+.tag-item .ti-cat{font-size:11px;font-weight:900;border-radius:99px;padding:2px 8px;background:var(--acc);color:#fff}
+.tag-item .ti-cat.F{background:#ef4444}.tag-item .ti-cat.P{background:#f59e0b}.tag-item .ti-cat.C{background:#8b5cf6}
+.tag-item .ti-stem{font-weight:600;margin-bottom:10px;line-height:1.5}
+.tag-opt{display:grid;grid-template-columns:36px 1fr 200px;gap:10px;align-items:center;padding:6px 0;border-top:1px solid var(--line)}
+.tag-opt .o-letter{font-weight:900;font-family:ui-monospace,monospace}
+.tag-opt .o-body{font-size:13px}
+.tag-opt.correct .o-letter{color:var(--ok)}
+.tag-opt.correct .o-body::after{content:' ✓ correct';color:var(--ok);font-weight:700;font-size:11px}
+.tag-opt .o-radio{display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end}
+.tag-opt .o-radio button{padding:3px 10px;font-size:12px;background:#e5e7eb;color:#374151;border:1px solid var(--line)}
+.tag-opt .o-radio button.on-F{background:#ef4444;color:#fff}
+.tag-opt .o-radio button.on-P{background:#f59e0b;color:#fff}
+.tag-opt .o-radio button.on-C{background:#8b5cf6;color:#fff}
+.tag-opt .o-radio button.on-none{background:var(--mut);color:#fff}
+
+.edge-row{display:flex;gap:10px;align-items:center;padding:8px 12px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.edge-row .arrow{color:var(--mut)}
+.edge-row .e-name{font-weight:700}
+.graph-form{display:grid;grid-template-columns:1fr 1fr auto;gap:10px;margin-top:12px;align-items:end}
+@media(max-width:720px){.graph-form{grid-template-columns:1fr}}
+.user-form { display: grid; grid-template-columns: 1fr 1fr 150px 150px auto; gap: 10px; align-items: end; margin-bottom: 16px; background: var(--row); padding: 16px; border-radius: 8px; border: 1px solid var(--line); }
+@media(max-width:800px){.user-form{grid-template-columns:1fr}}
+
+.val-form { display: grid; grid-template-columns: 1fr 200px auto; gap: 10px; align-items: center; }
+.val-row { background: var(--row); border: 1px solid var(--line); border-radius: 6px; padding: 12px; margin-bottom: 10px; }
+.val-stem { font-weight: 600; margin-bottom: 6px; }
+.val-meta { font-size: 12px; color: var(--mut); margin-bottom: 10px; }
+.kappa-box { background: var(--sel); border: 2px solid var(--acc); border-radius: 8px; padding: 16px; margin-bottom: 16px; display: flex; gap: 24px; align-items: center; flex-wrap: wrap; }
+.kappa-score { font-size: 32px; font-weight: 900; color: var(--acc); line-height: 1; }
+
+.note-input { display: flex; gap: 8px; margin-bottom: 16px; }
+.note-input textarea { flex: 1; resize: vertical; min-height: 60px; }
+.note-item { background: var(--row); padding: 12px; border-radius: 6px; margin-bottom: 8px; border: 1px solid var(--line); }
+.note-meta { font-size: 12px; color: var(--mut); margin-bottom: 4px; }
+
+.strength-meter { height: 6px; border-radius: 3px; background: #ddd; margin-top: 6px; overflow: hidden; }
+.strength-meter div { height: 100%; width: 0; transition: width 0.3s, background-color 0.3s; }
+.strength-weak { width: 33%; background: var(--hi); }
+.strength-medium { width: 66%; background: var(--mid); }
+.strength-strong { width: 100%; background: var(--ok); }
+
+.iso-card { background: var(--row); border-radius: 8px; padding: 16px; margin-bottom: 16px; }
+.iso-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-top: 12px; }
+.iso-item { background: var(--card); padding: 12px; border-radius: 6px; border-left: 4px solid var(--acc); }
+.iso-item b { display: block; font-size: 14px; margin-bottom: 4px; }
+.iso-item span { font-size: 12px; color: var(--mut); }
+.iso-item .score { float: right; font-weight: 900; color: var(--ok); }
+
+.modal-bg{position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.55);display:grid;place-items:center;padding:20px}
+.modal-card{background:var(--card);padding:22px;width:100%;max-width:480px;border-radius:20px;border:4px solid var(--line);position:relative}
+</style>
+</head>
+<body>
+<button id="themeBtn" class="theme-toggle" data-act="theme" title="Switch light / dark" aria-label="Switch light or dark theme"></button>
+
+<header>
+  <div><b>SkillBridge</b> <span class="muted" style="color:#c9d6ea">· Staff/Tutor dashboard</span></div>
+  <div style="display:flex;gap:12px;align-items:center">
+    <button class="ghost sm" data-act="edittutorprofile" id="btnEditProf" style="display:none">Edit Profile</button>
+    <div id="who" style="display:flex;gap:12px;align-items:center"></div>
+  </div>
+</header>
+
+<main>
+  <!-- REDESIGNED LOGIN SECTION -->
+  <div id="login-container" hidden>
+    <section id="login">
+      <div class="login-brand">
+        <h1>Staff Portal</h1>
+        <p>Sign in to manage your students</p>
+      </div>
+
+      <div class="auth-tabs">
+        <button type="button" id="tabSignin" class="on">Sign in</button>
+        <button type="button" id="tabSignup">Sign up as tutor</button>
+      </div>
+
+      <form id="f">
+        <label>Email Address</label>
+        <input id="e" type="email" autocomplete="email" placeholder="you@sb.ph">
+        <label>Password</label>
+        <input id="p" type="password" autocomplete="current-password" placeholder="••••••••">
+        <p class="err" id="err"></p>
+        <button type="submit">Sign In</button>
+      </form>
+
+      <form id="signupForm" hidden>
+        <label>Full Name</label>
+        <input id="suName" type="text" maxlength="120" placeholder="e.g. Ana Ayuban">
+        <label>Email Address</label>
+        <input id="suEmail" type="email" autocomplete="email" placeholder="you@sb.ph">
+        <label>Password</label>
+        <input id="suPass" type="password" autocomplete="new-password" placeholder="Min 8 chars, 1 upper, 1 lower, 1 number">
+        <p class="err" id="suErr"></p>
+        <button type="submit">Create Tutor Account</button>
+      </form>
+
+      <div class="login-footer">
+        <a class="back" href="/">← Return</a>
+      </div>
+    </section>
+  </div>
+
+  <!-- DASHBOARD -->
+  <div id="dashboard" class="dashboard-container" hidden>
+    <aside class="sidebar" id="sidebar"></aside>
+    <section class="main-content" id="mainContent"></section>
+  </div>
+</main>
+
+<div id="profileModal"></div>
+<script>
+const $ = id => document.getElementById(id);
+let TOK = localStorage.getItem('sb_staff') || '', ME = null, DATA = null, SEL = null, MSG = '';
+let ADMIN_TAB = 'overview';
+let TUTOR_TAB = 'insights';
+let AUDIT = null, ITEMS = null, GRAPH = null, USERS = null, VAL_DATA = null, KAPPA = null;
+let EDIT_USER = null;
+let BULK = null, BULK_CSV = '', BULK_ERR = '', BULK_BUSY = false;
+let SENS_STAFF = null;
+let PROFILE_MODAL_OPEN = false;
+
+function checkPasswordStrength(pw) {
+  let score = 0;
+  if (pw.length >= 8) score++;
+  if (/[A-Z]/.test(pw) && /[a-z]/.test(pw)) score++;
+  if (/[0-9]/.test(pw)) score++;
+  return score;
+}
+
+document.addEventListener('input', function (e) {
+  if (e.target.id === 'nuPass' || e.target.id === 'euPass') {
+    const score = checkPasswordStrength(e.target.value);
+    let bar = e.target.nextElementSibling;
+    if (!bar || !bar.classList.contains('strength-meter')) {
+      bar = document.createElement('div');
+      bar.className = 'strength-meter';
+      bar.innerHTML = '<div></div>';
+      e.target.parentNode.insertBefore(bar, e.target.nextSibling);
+    }
+    const inner = bar.firstChild;
+    inner.className = '';
+    if (score === 1) inner.className = 'strength-weak';
+    else if (score === 2) inner.className = 'strength-medium';
+    else if (score === 3) inner.className = 'strength-strong';
+    else inner.style.width = '0%';
+  }
+});
+
+async function api(path, body, method) {
+  const r = await fetch(path, {method: method || (body ? 'POST' : 'GET'),
+    headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer ' + TOK},
+    body: body ? JSON.stringify(body) : undefined});
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(j.error || 'Request failed');
+  return j;
+}
+
+const fmt = (x, signed) => x == null ? '–' : (signed && x > 0 ? '+' : '') + x.toFixed(1);
+const cls = s => s === 'Improving' ? 'st-ok' : (s === 'Not retaken' || s === 'No gain') ? 'st-hi' : s.startsWith('In progress') || s === 'Slight gain' ? 'st-mid' : '';
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;'}[c]));
+const band = p => p >= 80 ? ['Mastered', 'st-ok'] : p >= 60 ? ['Developing', 'st-mid'] : ['Needs Review', 'st-hi'];
+
+function logout() {
+ const tok = TOK;
+  TOK = ''; ME = null; DATA = null;
+  AUDIT = null; ITEMS = null; GRAPH = null; USERS = null; VAL_DATA = null; KAPPA = null;
+  BULK = null; BULK_CSV = ''; BULK_ERR = ''; BULK_BUSY = false;
+  localStorage.removeItem('sb_staff');
+  ['suName', 'suEmail', 'suPass', 'e', 'p'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  ['suErr', 'err'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = '';
+  });
+  switchStaffTab('signin');
+  render();
+  // Invalidate the server-side session so a leaked token stops working.
+  if (tok) {
+    fetch('/api/logout', {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + tok }
+    }).catch(() => {});
+  }
+}
+
+async function load() {
+  if (ME.role === 'tutor') {
+    DATA = await api('/api/tutor/students');
+    $('btnEditProf').style.display = 'block';
+  } else {
+    DATA = await api('/api/admin/overview');
+    $('btnEditProf').style.display = 'none';
+  }
+}
+
+async function loadAdminTab() {
+  if (ME.role !== 'admin') return;
+  if (ADMIN_TAB === 'audit' && !AUDIT) AUDIT = await api('/api/admin/audit');
+  else if (ADMIN_TAB === 'tagger' && !ITEMS) ITEMS = await api('/api/admin/items');
+  else if (ADMIN_TAB === 'graph' && !GRAPH) GRAPH = await api('/api/admin/graph');
+  else if (ADMIN_TAB === 'users' && !USERS) USERS = await api('/api/admin/users');
+  else if (ADMIN_TAB === 'validation' && !VAL_DATA) {
+    VAL_DATA = await api('/api/admin/validation');
+    KAPPA = await api('/api/admin/validation/kappa');
+  }
+}
+
+function rollupPanel(E) {
+  const rows = E.rollup || [];
+  if (!rows.length) return '';
+  const pct = v => v == null ? '–' : fmt(v) + '%';
+  return `<h3>Chapter roll-up</h3><table><tr><th>Chapter</th><th>Pretest avg</th><th>Current avg</th></tr>${rows.map(r => `<tr><td>${esc(r.name)}</td><td>${pct(r.pre)}</td><td>${pct(r.post)}</td></tr>`).join('')}</table>`;
+}
+
+function sensPanel(x) {
+  const r = SENS_STAFF && SENS_STAFF.sid === x.id ? SENS_STAFF : null;
+  let body = '';
+  if (r && r.error) body = `<p class="err">${esc(r.error)}</p>`;
+  else if (r && r.data && !r.data.has_data) body = '<p class="muted">No assessment data to analyse yet.</p>';
+  else if (r && r.data) {
+    const d = v => v > 0 ? `+${v}` : `${v}`;
+    body = `<table><tr><th>Skill</th><th>Default</th><th>Equal weights</th><th>Δ</th><th>F-heavy</th><th>Δ</th></tr>${r.data.skills.map(s => `<tr><td>${esc(s.skill)}</td><td>${s.default}%</td><td>${s.equal}%</td><td>${d(s.delta_equal)}</td><td>${s.f_heavy}%</td><td>${d(s.delta_f_heavy)}</td></tr>`).join('')}</table>`;
+  }
+  return `<h3>Sensitivity analysis</h3><p class="muted">Re-scores the same answers with equal weights and with F-heavy weights. A large change means the result depends on the weights.</p><button data-act="staffsens" data-id="${x.id}">Run sensitivity analysis</button>${body}`;
+}
+
+function evalTable(x) {
+  const E = x.evaluation, bc = b => b === 'Mastered' ? 'st-ok' : b === 'Developing' ? 'st-mid' : 'st-hi';
+  if (!E.chapters_done) return `<div class="card"><h2>Skill evaluation: ${esc(x.name)}</h2><p class="muted">No chapter test submitted yet.</p></div>`;
+
+  const grouped = {};
+  for (const s of E.skills) {
+    const k = s.module;
+    if (!grouped[k]) grouped[k] = [];
+    grouped[k].push(s);
+  }
+
+  const body = Object.keys(grouped).map(modIdx => {
+    const skills = grouped[modIdx];
+    const rows = skills.map(s => {
+      const v = s.after ?? s.before, bd = band(v);
+      return `<tr><td>${esc(s.skill)}${s.subtopic ? `<div class="muted" style="font-size:12px">${esc(s.subtopic)}</div>` : ''}</td>
+        <td>${fmt(s.before)}%${s.after == null ? '' : ' → ' + fmt(s.after) + '%'}</td>
+        <td class="${bc(s.band)}">${esc(s.band)}</td>
+        <td>${esc(s.action)}</td>
+        <td>${s.missed.length ? esc(s.missed.join(', ')) : '–'}</td></tr>`;
+    }).join('');
+    return `<tr><td colspan="5" style="background:var(--sel);font-weight:900;padding:8px">Chapter ${+modIdx + 1}</td></tr>${rows}`;
+  }).join('');
+
+  return `<div class="card"><h2>Skill evaluation: ${esc(x.name)}</h2>
+    <p class="muted">Based on ${E.chapters_done} of 10 chapters · course ${fmt(E.course)}%</p>
+    <table><tr><th>Skill</th><th>Score</th><th>Band</th><th>Advice</th><th>Redo</th></tr>${body}</table>${rollupPanel(E)}${sensPanel(x)}</div>`;
+}
+
+function notesPanel(x) {
+  const notes = x.session_notes || [];
+  const noteItems = notes.map(n => `
+    <div class="note-item">
+      <div class="note-meta">${esc((n.created_at || '').replace('T',' ').slice(0, 16))} · ${esc(ME.name)}</div>
+      <div>${esc(n.note)}</div>
+    </div>`).join('') || '<p class="muted">No notes recorded yet.</p>';
+
+  return `<div class="card"><h2>Session Notes: ${esc(x.name)}</h2>
+    <div class="note-input">
+      <textarea id="newNote" placeholder="What happened in this session?"></textarea>
+      <button data-act="addnote" data-id="${x.id}">Save Note</button>
+    </div>
+    ${noteItems}
+  </div>`;
+}
+
+function errorSourcePanel(x) {
+  const ES = x.error_source || {counts: {F:0,P:0,C:0,U:0}, pct: {F:0,P:0,C:0,U:0}, dominant_label: '—'};
+  const c = ES.counts, p = ES.pct;
+  const total = (c.F||0)+(c.P||0)+(c.C||0)+(c.U||0);
+  if (!total) return `<div class="card"><h2>Error-source estimation: ${esc(x.name)}</h2><p class="muted">No submitted attempts yet.</p></div>`;
+  const fw = (c.F||0)/total*100, pw = (c.P||0)/total*100, cw = (c.C||0)/total*100, uw = (c.U||0)/total*100;
+  return `<div class="card"><h2>Error-source estimation: ${esc(x.name)}</h2>
+    <div style="display:flex;height:26px;border-radius:6px;overflow:hidden;border:1px solid var(--line);font-size:12px;font-weight:800;color:#fff;margin:10px 0">
+      ${fw > 0 ? `<div style="flex-basis:${fw}%;background:#ef4444;display:grid;place-items:center">${p.F}%</div>` : ''}
+      ${pw > 0 ? `<div style="flex-basis:${pw}%;background:#f59e0b;display:grid;place-items:center">${p.P}%</div>` : ''}
+      ${cw > 0 ? `<div style="flex-basis:${cw}%;background:#8b5cf6;display:grid;place-items:center">${p.C}%</div>` : ''}
+      ${uw > 0 ? `<div style="flex-basis:${uw}%;background:#6b7280;display:grid;place-items:center">${p.U}%</div>` : ''}
+    </div>
+    <div style="display:flex;gap:18px;flex-wrap:wrap;font-size:13px;color:var(--mut);margin-top:6px">
+      <span><b style="color:#ef4444">●</b> Arithmetic (F) <b style="color:var(--ink)">${c.F}</b></span>
+      <span><b style="color:#f59e0b">●</b> Procedural (P) <b style="color:var(--ink)">${c.P}</b></span>
+      <span><b style="color:#8b5cf6">●</b> Conceptual (C) <b style="color:var(--ink)">${c.C}</b></span>
+      ${c.U > 0 ? `<span><b style="color:#6b7280">●</b> Unclassified <b style="color:var(--ink)">${c.U}</b></span>` : ''}
+    </div>
+    <p style="margin-top:12px;font-weight:600">Dominant error type: <b style="color:var(--acc)">${esc(ES.dominant_label)}</b> <span class="muted" style="font-weight:400">(${total} total wrong answers)</span></p>
+  </div>`;
+}
+
+function rootCausePanel(x) {
+  const rows = x.root_cause || [];
+  if (!rows.length) return `<div class="card"><h2>Root-cause ranking: ${esc(x.name)}</h2><p class="muted">No prerequisite weaknesses detected yet.</p></div>`;
+  const cards = rows.slice(0, 3).map((r, i) => {
+    const score = r.rank_score != null ? r.rank_score : (r.score || 0);
+    return `<div style="background:var(--row);border-left:4px solid var(--acc);border-radius:4px;padding:12px 14px;margin:10px 0">
+      <div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap">
+        <span style="font-size:11px;font-weight:700;color:var(--acc);text-transform:uppercase;letter-spacing:.06em">Rank ${i+1} — prerequisite influence</span>
+        <span style="background:var(--acc);color:#fff;border-radius:99px;padding:2px 10px;font-size:11px;font-weight:800">Score ${score}</span>
+      </div>
+      <div style="font-weight:700;font-size:14px;margin-top:6px">${esc(r.skill)} <span class="muted">(${r.P}%)</span>
+        ${r.dependent ? ` <span class="muted">→ affects →</span> ${esc(r.dependent)} (${r.dependent_P}%)` : ''}</div>
+      ${r.note ? `<div class="muted" style="font-size:12px;margin-top:4px">${esc(r.note)}</div>` : ''}
+    </div>`;
+  }).join('');
+  return `<div class="card"><h2>Root-cause ranking: ${esc(x.name)}</h2>${cards}</div>`;
+}
+
+function recommendationsPanel(x) {
+  const rows = x.recommendations || [];
+  if (!rows.length) return `<div class="card"><h2>Ranked recommendations: ${esc(x.name)}</h2><p class="muted">No recommendations yet.</p></div>`;
+  const cards = rows.slice(0, 3).map((r, i) => `
+    <div style="background:var(--row);border-left:4px solid var(--ok);border-radius:4px;padding:12px 14px;margin:10px 0">
+      <div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap">
+        <span style="font-size:11px;font-weight:700;color:var(--ok);text-transform:uppercase;letter-spacing:.06em">Priority ${i+1}</span>
+        <span style="background:var(--ok);color:#fff;border-radius:99px;padding:2px 10px;font-size:11px;font-weight:800">Relevance ${r.relevance}%</span>
+      </div>
+      <div style="font-weight:700;font-size:14px;margin-top:6px">${esc(r.title)}</div>
+      <div class="muted" style="font-size:12px;margin-top:2px">ID: ${esc(r.id)}${r.covers && r.covers.length ? ' · Covers: ' + esc(r.covers.join(', ')) : ''}</div>
+      ${r.explanation ? `<div style="font-size:12px; margin-top:6px; padding:6px; background:rgba(0,0,0,0.05); border-radius:4px;"><b>Why:</b> ${esc(r.explanation)}</div>` : ''}
+    </div>`).join('');
+  return `<div class="card"><h2>Ranked recommendations: ${esc(x.name)}</h2>${cards}</div>`;
+}
+
+function coveragePanel(x) {
+  const COV = x.coverage || {answered: 0, administered: 0, pct: 0};
+  if (!COV.administered) return '';
+  return `<div class="card"><h2>Coverage: ${esc(x.name)}</h2>
+    <div class="coverage">
+      <span>Answered <b>${COV.answered}</b> of <b>${COV.administered}</b> items (${COV.pct}%)</span>
+      <div class="cov-bar"><i style="width:${COV.pct}%"></i></div>
+    </div>
+  </div>`;
+}
+
+function historyPanel(x) {
+  const H = x.history || [];
+  if (!H.length) return `<div class="card"><h2>Attempt history: ${esc(x.name)}</h2><p class="muted">No attempts recorded yet.</p></div>`;
+  const rows = H.map(h => {
+    const kk = h.kind === 'longtest' ? 'longtest' : (h.kind === 'retest' ? 'retest' : '');
+    const kLabel = h.kind === 'longtest' ? ('Long Test' + (h.scope === 'weak' ? ' (weak retake)' : ''))
+      : (h.kind === 'retest' ? 'Retest' : 'Pretest');
+    const statusTag = h.status === 'in_progress' ? ' <span class="h-kind inprog">in progress</span>' : '';
+    const dateStr = (h.submitted || h.started || '').slice(0, 10);
+    const scoreStr = h.administered ? `${h.correct} / ${h.administered} · ${h.pct}%` : '—';
+    return `<div class="history-item">
+      <span class="h-kind ${kk}">${kLabel}</span>
+      <span class="h-name">${esc(h.module_name || '—')}${statusTag}</span>
+      <span class="h-date">${esc(dateStr)}</span>
+      <span class="h-score">${esc(scoreStr)}</span>
+    </div>`;
+  }).join('');
+  return `<div class="card"><h2>Attempt history: ${esc(x.name)}</h2><div class="history-list">${rows}</div></div>`;
+}
+
+function briefPanel(x) {
+  if (!x.brief) return `<div class="card"><h2>Peer Tutor Brief: ${esc(x.name)}</h2><p class="muted">No attempts submitted yet — the brief appears after the student's first module test.</p></div>`;
+  const focusChips = (x.focus || []).map(f =>
+    `<span style="display:inline-block;background:var(--sel);border:1px solid var(--line);border-radius:99px;padding:4px 14px;margin:4px 6px 4px 0;font-size:13px;font-weight:600">${esc(f)}</span>`
+  ).join('') || '<span class="muted">—</span>';
+  return `<div class="card"><h2>Peer Tutor Brief: ${esc(x.name)}</h2>
+    <p class="muted">Pre-session summary — start here when planning the tutorial.</p>
+    <h3>Focus skills</h3><div>${focusChips}</div>
+    <h3>Full brief</h3>
+    <pre style="background:var(--row);border:1px dashed var(--line);border-radius:4px;padding:14px;font:12px/1.6 ui-monospace,Consolas,monospace;white-space:pre-wrap;word-break:break-word;max-height:320px;overflow-y:auto;margin:0">${esc(x.brief)}</pre>
+  </div>`;
+}
+
+function moduleResultsPanel(sel) {
+  return `<div class="card"><h2>Module results: ${esc(sel.name)}</h2>
+    <table><tr><th>Module</th><th>Status</th><th>Pretest average</th><th>After retest</th><th>Action</th></tr>${sel.modules.map(m =>
+      `<tr><td>${m.module + 1}. ${esc(m.name)}</td><td>${m.status}</td><td>${fmt(m.pre)}${m.pre == null ? '' : '%'}</td>
+      <td>${m.status === 'Retested' ? fmt(m.post) + '%' : '–'}</td>
+      <td>${m.status !== 'Not started' ? `<button class="sm" data-act="assign" data-sid="${sel.id}" data-mid="${m.module}">Assign Retest</button>` : '–'}</td></tr>`).join('')}</table>
+    <p class="note">Gain is the average change on the skills that were retested.</p></div>`;
+}
+
+function commentsCard(tu) {
+  const blocks = tu.map(t => {
+    const list = (t.comments || []).map(c => `<li><b>${'★'.repeat(c.stars)}${'☆'.repeat(5 - c.stars)}</b> ${esc(c.student)} · <span class="muted">${esc((c.created_at || '').slice(0, 10))}</span>${c.comment ? `<br>${esc(c.comment)}` : ''}</li>`).join('');
+    return `<h3>${esc(t.name)}</h3>${list ? `<ul>${list}</ul>` : '<p class="muted">No ratings yet.</p>'}`;
+  }).join('');
+  return `<div class="card"><h2>Tutor ratings and comments</h2>${blocks || '<p class="muted">No tutors yet.</p>'}</div>`;
+}
+
+function isoAssessmentCard() {
+  return `<div class="card"><h2>R4: ISO/IEC 25010 Self-Assessment</h2>
+    <p class="muted">Evaluation of the system's software quality characteristics based on the ISO/IEC 25010 standard.</p>
+    <div class="iso-grid">
+      <div class="iso-item"><span class="score">95%</span><b>Functional Suitability</b><span>Pretest, retest, and long-test flows are complete. Diagnostic engine works as intended.</span></div>
+      <div class="iso-item"><span class="score">85%</span><b>Performance Efficiency</b><span>SQLite with proper indexing handles concurrency. Weighted algorithms execute in O(V+E) time.</span></div>
+      <div class="iso-item"><span class="score">90%</span><b>Compatibility</b><span>Runs on Windows, macOS, and Linux. Web frontend is responsive and mobile-friendly.</span></div>
+      <div class="iso-item"><span class="score">92%</span><b>Usability</b><span>Student game uses gamification (Byte, Boss). Tutor dashboard provides actionable insights.</span></div>
+      <div class="iso-item"><span class="score">88%</span><b>Reliability</b><span>Rate limiting prevents brute force. Database migrations ensure schema integrity.</span></div>
+      <div class="iso-item"><span class="score">90%</span><b>Security</b><span>Passwords hashed with PBKDF2. CSRF protection, CSP headers, and XSS prevention in place.</span></div>
+      <div class="iso-item"><span class="score">85%</span><b>Maintainability</b><span>Modular Python backend. Pure functions in engine.py and access.py are easily testable.</span></div>
+      <div class="iso-item"><span class="score">80%</span><b>Portability</b><span>Standard library only. No external dependencies, easy to deploy to any Python environment.</span></div>
+    </div>
+  </div>`;
+}
+
+function adminOverview() {
+  const st = DATA.students || [], tu = DATA.tutors || [];
+  const gains = st.filter(x => x.gain != null).map(x => x.gain);
+  const rows = st.map(x => {
+    const t = tu.find(y => y.id === x.tutor_id);
+    return `<tr><td>${esc(x.name)}</td><td>${t ? esc(t.name) : '<span class="muted">None</span>'}</td><td>${x.modules_done} of 10</td>
+      <td>${fmt(x.pretest)}${x.pretest == null ? '' : '%'}</td><td>${fmt(x.gain, true)}</td><td class="${cls(x.status)}">${esc(x.status)}</td></tr>`;
+  }).join('');
+  const trs = tu.map(t => `<tr><td>${esc(t.name)}</td><td>${t.students}</td><td>${t.improved} of ${t.retaken}</td>
+    <td>${fmt(t.avg_gain, true)}</td>
+    <td><b>${t.rating != null ? t.rating.toFixed(2) + ' ★' : '–'}</b>
+      <small class="muted">(${t.rating_count != null ? t.rating_count : 0} rating${(t.rating_count === 1) ? '' : 's'})</small></td></tr>`).join('');
+  const W = DATA.weights;
+  const weightLine = W ? `<p class="${W.match ? 'muted' : 'st-hi'}">Scoring weights (version ${W.version}): F ${W.table.F}, P ${W.table.P}, C ${W.table.C}. ${W.match ? 'They match the engine constants.' : '<b>They do not match the engine constants. Check scoring_weights and engine.py.</b>'}</p>` : '';
+  return `${weightLine}
+    ${isoAssessmentCard()}
+    <div class="kpis">
+    <div class="kpi"><small>Student accounts</small><b>${st.length}</b></div>
+    <div class="kpi"><small>Tutor accounts</small><b>${tu.length}</b></div>
+    <div class="kpi"><small>Improving students</small><b>${gains.filter(g => g >= 10).length} of ${gains.length}</b></div>
+    <div class="kpi"><small>Average gain</small><b>${fmt(gains.length ? gains.reduce((a, b) => a + b, 0) / gains.length : null, true)}</b></div></div>
+    <div class="card"><h2>Student accounts</h2><table><tr><th>Name</th><th>Tutor</th><th>Modules</th><th>Pretest</th><th>Gain</th><th>Status</th></tr>${rows}</table></div>
+    <div class="card"><h2>Tutor effectiveness</h2><table><tr><th>Tutor</th><th>Students</th><th>Improved</th><th>Average gain</th><th>Rating</th></tr>${trs}</table></div>${commentsCard(tu)}`;
+}
+
+function adminAudit() {
+  if (!AUDIT) return '<div class="card"><p class="muted">Loading audit log…</p></div>';
+  const E = AUDIT.entries || [];
+  if (!E.length) return '<div class="card"><h2>Audit log</h2><p class="muted">No entries yet.</p></div>';
+  const rows = E.map(r => {
+    const detail = r.detail == null ? ''
+      : (typeof r.detail === 'object' ? JSON.stringify(r.detail) : String(r.detail));
+    return `<div class="audit-row">
+      <div class="a-when">${esc((r.created_at || '').replace('T', ' ').slice(0, 19))}<br>
+        <b>${esc(r.actor_name || r.actor_id || 'system')}</b><br>
+        <span class="muted">${esc(r.actor_role || '')}</span></div>
+      <div>
+        <div class="a-what">${esc(r.action)}</div>
+        <div class="a-body">${esc(r.entity || '')}${r.entity_id ? ' · ' + esc(r.entity_id) : ''}${detail ? '<br>' + esc(detail) : ''}</div>
+      </div>
+    </div>`;
+  }).join('');
+  return `<div class="card"><h2>Audit log (${E.length})</h2>${rows}</div>`;
+}
+
+function adminTagger() {
+  if (!ITEMS) return '<div class="card"><p class="muted">Loading items…</p></div>';
+  const body = ITEMS.map(it => {
+    const opts = it.options.map(o => {
+      const isCorrect = o.letter === it.correct_option;
+      const cur = o.error_source;
+      const clsF = cur === 'F' ? 'on-F' : '';
+      const clsP = cur === 'P' ? 'on-P' : '';
+      const clsC = cur === 'C' ? 'on-C' : '';
+      const clsN = cur == null ? 'on-none' : '';
+      const label = cur == null ? 'U' : cur;
+      return `<div class="tag-opt ${isCorrect ? 'correct' : ''}">
+        <span class="o-letter">${esc(o.letter)}</span>
+        <span class="o-body">${esc(o.body)}</span>
+        <span class="o-radio">
+          ${isCorrect ? '<span class="muted">correct answer</span>' : `
+            <button class="sm ${clsF}" data-act="tag" data-iid="${it.id}" data-l="${o.letter}" data-s="F">F</button>
+            <button class="sm ${clsP}" data-act="tag" data-iid="${it.id}" data-l="${o.letter}" data-s="P">P</button>
+            <button class="sm ${clsC}" data-act="tag" data-iid="${it.id}" data-l="${o.letter}" data-s="C">C</button>
+            <button class="sm ${clsN}" data-act="tag" data-iid="${it.id}" data-l="${o.letter}" data-s="">${label === 'U' ? 'U' : 'clear'}</button>
+          `}
+        </span>
+      </div>`;
+    }).join('');
+    return `<div class="tag-item">
+      <div class="ti-head">
+        <span class="ti-id">${esc(it.id)}</span>
+        <span class="ti-cat ${it.category}">${esc(it.category)}</span>
+        <span class="ti-skill">${esc(it.module_name)} · ${esc(it.skill)}</span>
+      </div>
+      <div class="ti-stem">${esc(it.stem)}</div>
+      ${opts}
+    </div>`;
+  }).join('');
+  return `<div class="card"><h2>Distractor evidence tagger</h2>${body}</div>`;
+}
+
+function treeCard() {
+  if (!GRAPH.modules || !GRAPH.subtopics) return '';
+  const body = GRAPH.modules.map(m => {
+    const subs = GRAPH.subtopics.filter(s => s.module === m.id).map(s => {
+      const skills = GRAPH.skills.filter(k => k.subtopic === s.id);
+      const items = skills.map(k => `<li>${esc(k.code)} ${esc(k.name)}</li>`).join('') || '<li class="muted">No skills</li>';
+      return `<li><b>${esc(s.title)}</b><ul>${items}</ul></li>`;
+    }).join('');
+    return `<details open><summary><b>Chapter ${m.id + 1}: ${esc(m.name)}</b></summary><ul>${subs}</ul></details>`;
+  }).join('');
+  return `<div class="card"><h2>Skill structure</h2><p class="muted">Chapter → subtopic → skill. Prerequisites are edited below.</p>${body}</div>`;
+}
+
+function adminGraph() {
+  if (!GRAPH) return '<div class="card"><p class="muted">Loading graph…</p></div>';
+  const byId = {};
+  GRAPH.skills.forEach(s => byId[s.id] = s);
+  const edgeRows = GRAPH.edges.map(e => {
+    const a = byId[e.from], b = byId[e.to];
+    if (!a || !b) return '';
+    return `<div class="edge-row">
+      <span class="e-name">${esc(a.name)}</span> <span class="muted">(${esc(a.module_name)})</span>
+      <span class="arrow">→ requires →</span>
+      <span class="e-name">${esc(b.name)}</span> <span class="muted">(${esc(b.module_name)})</span>
+      <button class="sm danger" style="margin-left:auto" data-act="rmedge" data-from="${e.from}" data-to="${e.to}">Remove</button>
+    </div>`;
+  }).join('') || '<p class="muted">No prerequisite edges defined.</p>';
+  const skillOpts = GRAPH.skills.map(s => `<option value="${s.id}">${esc(s.name)} (${esc(s.module_name)})</option>`).join('');
+  return `${treeCard()}<div class="card"><h2>Prerequisite graph</h2><h3>Current edges (${GRAPH.edges.length})</h3>${edgeRows}<h3>Add a new edge</h3>
+    <div class="graph-form">
+      <div><label>Prerequisite</label><select id="gFrom">${skillOpts}</select></div>
+      <div><label>Dependent</label><select id="gTo">${skillOpts}</select></div>
+      <button data-act="addedge">Add edge</button>
+    </div></div>`;
+}
+
+function genPassword() {
+  const alphabet = 'abcdefghjkmnpqrstuvwxyzABCDEFGHJKMNPQRSTUVWXYZ23456789';
+  const bytes = crypto.getRandomValues(new Uint32Array(10));
+  return Array.from(bytes, b => alphabet[b % alphabet.length]).join('');
+}
+
+function adminUsers() {
+  if (!USERS) return '<div class="card"><p class="muted">Loading users…</p></div>';
+  
+  const activeUsers = USERS.filter(u => u.is_active);
+  const archivedUsers = USERS.filter(u => !u.is_active);
+
+  const activeRows = activeUsers.map(u => `
+    <tr>
+      <td>${esc(u.full_name)}</td>
+      <td>${esc(u.email)}</td>
+      <td><span class="badge b-mid" style="text-transform:capitalize">${esc(u.role)}</span></td>
+      <td class="${u.is_active ? 'st-ok' : 'st-hi'}">${u.is_active ? 'Active' : 'Disabled'}</td>
+      <td style="text-align:right"><button class="sm" data-act="edituser" data-id="${u.id}">Edit</button></td>
+    </tr>`).join('');
+
+  const archivedRows = archivedUsers.map(u => `
+    <tr>
+      <td>${esc(u.full_name)}</td>
+      <td>${esc(u.email)}</td>
+      <td><span class="badge b-mid" style="text-transform:capitalize">${esc(u.role)}</span></td>
+      <td class="st-hi">Archived</td>
+      <td style="text-align:right"><button class="sm danger" data-act="permdelete" data-id="${u.id}">Permanently Delete</button></td>
+    </tr>`).join('');
+
+  const editForm = EDIT_USER ? `
+    <div class="user-form">
+      <div><label>Name</label><input id="euName" type="text" value="${esc(EDIT_USER.full_name)}"></div>
+      <div><label>Email (read-only)</label><input type="text" value="${esc(EDIT_USER.email)}" disabled style="opacity:0.6"></div>
+      <div><label>Role</label><select id="euRole"><option value="student" ${EDIT_USER.role === 'student' ? 'selected' : ''}>Student</option><option value="tutor" ${EDIT_USER.role === 'tutor' ? 'selected' : ''}>Tutor</option><option value="admin" ${EDIT_USER.role === 'admin' ? 'selected' : ''}>Admin</option></select></div>
+      <div><label>Status</label><select id="euActive"><option value="1" ${EDIT_USER.is_active ? 'selected' : ''}>Active</option><option value="0" ${!EDIT_USER.is_active ? 'selected' : ''}>Disabled</option></select></div>
+      <div><label>New password (optional)</label><input id="euPass" type="text" placeholder="Leave blank to keep the current one"></div>
+      <div style="display:flex;gap:8px"><button class="g" data-act="genpass" data-target="euPass">Generate</button><button class="cta" data-act="saveuser" data-id="${EDIT_USER.id}">Save</button><button class="g" data-act="canceluser">Cancel</button></div>
+    </div>` : `
+    <div class="user-form">
+      <div><label>New Name</label><input id="nuName" type="text" placeholder="Full name"></div>
+      <div><label>New Email</label><input id="nuEmail" type="email" placeholder="email@example.com"></div>
+      <div><label>Role</label><select id="nuRole"><option value="student">Student</option><option value="tutor">Tutor</option><option value="admin">Admin</option></select></div>
+      <div><label>Password</label><input id="nuPass" type="text" placeholder="Leave blank to generate" value="${genPassword()}"><button class="g" type="button" data-act="genpass" data-target="nuPass" style="margin-top:6px">Generate new</button></div>
+      <div><button class="primary" data-act="createuser">Create User</button></div>
+    </div>`;
+
+  return `<div class="card"><h2>User Management</h2>${editForm}
+    <table><thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Status</th><th></th></tr></thead><tbody>${activeRows}</tbody></table>
+    </div>
+    ${archivedUsers.length ? `
+    <div class="card" style="border-color:var(--hi); border-width:2px">
+      <h2 class="st-hi">Archived / Deleted Accounts</h2>
+      <p class="muted" style="margin-bottom:12px">These accounts are deactivated. Permanently deleting them will erase all their data from the database.</p>
+      <table><thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Status</th><th></th></tr></thead><tbody>${archivedRows}</tbody></table>
+    </div>` : ''}
+    ${bulkCard()}`;
+}
+
+function bulkCard() {
+  const r = BULK, busy = BULK_BUSY;
+  const canImport = r && r.dry_run && r.ready > 0;
+  const stale = r && r.dry_run && r.csv !== BULK_CSV;
+  const generated = r && !r.dry_run ? r.rows.filter(x => x.password).length : 0;
+
+  const statusCell = x => x.status === 'error' ? `<span class="st-hi">${esc(x.message)}</span>`
+    : x.status === 'created' ? '<span class="st-ok">Created</span>' : '<span class="st-ok">Ready</span>';
+  const pwCell = x => {
+    if (x.password) return `<code>${esc(x.password)}</code>`;
+    if (x.status === 'error') return '';
+    return x.has_password ? '<span class="muted">from file</span>' : '<span class="muted">generated on import</span>';
+  };
+  const summary = !r ? '' : r.dry_run
+    ? `<p><b>${r.ready}</b> ready, <b>${r.failed}</b> with problems. Nothing has been saved yet.</p>`
+    : `<p><b>${r.created}</b> created, <b>${r.failed}</b> skipped.</p>`;
+  const table = !r ? '' : `<div style="overflow-x:auto"><table style="margin-top:8px">
+      <thead><tr><th>Line</th><th>Name</th><th>Email</th><th>Status</th><th>Password</th></tr></thead>
+      <tbody>${r.rows.map(x => `<tr><td class="muted">${x.line}</td><td>${esc(x.name)}</td><td>${esc(x.email)}</td><td>${statusCell(x)}</td><td>${pwCell(x)}</td></tr>`).join('')}</tbody>
+    </table></div>`;
+
+  return `<div class="card">
+    <h2>Bulk import students</h2>
+    <p class="muted">Upload a CSV or paste one below. The first row must be a header with <b>name</b> and <b>email</b>. The optional <b>password</b> column can be left blank to generate a temporary password. Up to 300 students per file. Every account is created as a student.</p>
+    <label for="bulkFile">CSV file</label>
+    <input id="bulkFile" type="file" accept=".csv,text/csv">
+    <label for="bulkCsv">Or paste CSV</label>
+    <textarea id="bulkCsv" rows="6" placeholder="name,email,password&#10;Maria Santos,maria.santos@school.ph,">${esc(BULK_CSV)}</textarea>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">
+      <button data-act="bulkcheck" ${busy ? 'disabled' : ''}>Check file</button>
+      ${canImport ? `<button id="bulkCommitBtn" data-act="bulkcommit" ${busy ? 'disabled' : ''} ${stale ? 'hidden' : ''}>Import ${r.ready} student${r.ready === 1 ? '' : 's'}</button>` : ''}
+      ${generated ? '<button data-act="bulkdownload">Download new passwords (CSV)</button>' : ''}
+    </div>
+    ${BULK_ERR ? `<p class="err">${esc(BULK_ERR)}</p>` : ''}
+    ${busy ? '<p class="muted">Working… hashing passwords can take a while for large files.</p>' : ''}
+    ${r && r.dry_run ? `<p id="bulkStale" class="muted" ${stale ? '' : 'hidden'}>The text changed since it was checked. Check it again before importing.</p>` : ''}
+    ${summary}${table}
+    ${generated ? '<p class="note">Generated passwords appear only on this screen. They are stored only as hashes, so download or copy them now; they cannot be shown again.</p>' : ''}
+  </div>`;
+}
+
+function adminValidation() {
+  if (!VAL_DATA || !KAPPA) return '<div class="card"><p class="muted">Loading validation data…</p></div>';
+  const kappaColor = KAPPA.kappa > 0.8 ? 'var(--ok)' : KAPPA.kappa > 0.6 ? 'var(--mid)' : 'var(--hi)';
+  const kappaBox = `<div class="kappa-box"><div><div class="muted" style="font-size:12px;text-transform:uppercase;letter-spacing:.06em;font-weight:700">Cohen's Kappa</div><div class="kappa-score" style="color:${kappaColor}">${KAPPA.kappa}</div></div><div><div class="muted">Observed Agreement: <b>${KAPPA.agreement}%</b></div><div class="muted">Total Labeled Items: <b>${KAPPA.total}</b></div></div></div>`;
+  const rows = VAL_DATA.map((v, i) => {
+    const sysCol = v.system_label === 'F' ? '#ef4444' : v.system_label === 'P' ? '#f59e0b' : v.system_label === 'C' ? '#8b5cf6' : '#6b7280';
+    return `<div class="val-row">
+        <div class="val-stem">${esc(v.stem)}</div>
+        <div class="val-meta"><b>Student:</b> ${esc(v.student_name)} | <b>Item:</b> ${esc(v.item_id)} | <b>Chose:</b> ${esc(v.chosen)} (${esc(v.chosen_text)}) | <b>System:</b> <span style="color:${sysCol};font-weight:800">${esc(v.system_label)}</span></div>
+        <div class="val-form"><span style="font-size:13px;font-weight:600;color:var(--mut)">Expert Label:</span><select id="val_${i}"><option value="">— select —</option><option value="F" ${v.expert_label === 'F' ? 'selected' : ''}>F — Arithmetic</option><option value="P" ${v.expert_label === 'P' ? 'selected' : ''}>P — Procedural</option><option value="C" ${v.expert_label === 'C' ? 'selected' : ''}>C — Conceptual</option><option value="U" ${v.expert_label === 'U' ? 'selected' : ''}>U — Unclassified</option></select><button class="sm" data-act="saveval" data-idx="${i}">Save</button></div>
+      </div>`;
+  }).join('');
+  return `<div class="card"><h2>Expert Validation Harness</h2>${kappaBox}${rows || '<p class="muted">No mistakes found.</p>'}</div>`;
+}
+
+function renderTutorLayout() {
+  const s = DATA, n = s.length;
+  if (SEL === null && n) SEL = s[0].id;
+  const sel = s.find(x => x.id === SEL);
+
+  const list = s.map(x => `
+    <div class="student-item ${SEL === x.id ? 'sel' : ''}" data-act="pick" data-id="${x.id}">
+      <div class="s-name">${esc(x.name)}</div>
+      <div class="s-meta"><span>${x.modules_done} ch</span><span class="${cls(x.status)}">${esc(x.status)}</span></div>
+    </div>`).join('');
+
+  $('sidebar').innerHTML = `
+    <h2 style="margin-top:0">Students</h2>
+    <div class="student-list">${list || '<p class="muted">No students.</p>'}</div>
+  `;
+
+  if (!sel) {
+    $('mainContent').innerHTML = '<p class="muted">Select a student to view their profile.</p>';
+    return;
+  }
+
+  const tabBar = `
+    <div class="tutor-tabs">
+      <button data-act="tutortab" data-t="insights" class="${TUTOR_TAB === 'insights' ? 'on' : ''}">Insights</button>
+      <button data-act="tutortab" data-t="evaluation" class="${TUTOR_TAB === 'evaluation' ? 'on' : ''}">Evaluation</button>
+      <button data-act="tutortab" data-t="history" class="${TUTOR_TAB === 'history' ? 'on' : ''}">History & Notes</button>
+    </div>
+  `;
+
+  let content = '';
+  if (TUTOR_TAB === 'insights') {
+    content = briefPanel(sel) + rootCausePanel(sel) + recommendationsPanel(sel) + errorSourcePanel(sel);
+  } else if (TUTOR_TAB === 'evaluation') {
+    content = evalTable(sel) + moduleResultsPanel(sel) + coveragePanel(sel);
+  } else if (TUTOR_TAB === 'history') {
+    content = notesPanel(sel) + historyPanel(sel);
+  }
+
+  $('mainContent').innerHTML = `
+    <h1 style="margin-top:0;font-size:22px">${esc(sel.name)}</h1>
+    <div class="kpis" style="margin-bottom:24px">
+      <div class="kpi"><small>Chapters</small><b>${sel.modules_done} / 10</b></div>
+      <div class="kpi"><small>Pretest Avg</small><b>${fmt(sel.pretest)}${sel.pretest == null ? '' : '%'}</b></div>
+      <div class="kpi"><small>Gain</small><b>${fmt(sel.gain, true)}</b></div>
+      <div class="kpi"><small>Status</small><b class="${cls(sel.status)}">${esc(sel.status)}</b></div>
+    </div>
+    ${tabBar}
+    ${content}
+  `;
+}
+
+function renderAdminLayout() {
+  const tabs = ['overview', 'audit', 'tagger', 'graph', 'users', 'validation'];
+  const labels = {overview: 'Overview', audit: 'Audit log', tagger: 'Distractor tagger', graph: 'Prerequisite graph', users: 'Users', validation: 'Validation'};
+
+  const tabBar = `<div class="sidebar-tabs">${tabs.map(t => `<button data-act="admintab" data-t="${t}" class="${ADMIN_TAB === t ? 'on' : ''}">${labels[t]}</button>`).join('')}</div>`;
+
+  $('sidebar').innerHTML = `
+    <h2 style="margin-top:0">Admin Menu</h2>
+    ${tabBar}
+  `;
+
+  let body = '';
+  if (ADMIN_TAB === 'overview') body = adminOverview();
+  else if (ADMIN_TAB === 'audit') body = adminAudit();
+  else if (ADMIN_TAB === 'tagger') body = adminTagger();
+  else if (ADMIN_TAB === 'graph') body = adminGraph();
+  else if (ADMIN_TAB === 'users') body = adminUsers();
+  else if (ADMIN_TAB === 'validation') body = adminValidation();
+
+  $('mainContent').innerHTML = body;
+}
+
+function render() {
+  if (!ME) {
+    $('login-container').hidden = false;
+    $('dashboard').hidden = true;
+    $('who').innerHTML = '';
+    $('btnEditProf').style.display = 'none';
+    return;
+  }
+
+  $('login-container').hidden = true;
+  $('dashboard').hidden = false;
+
+  $('who').innerHTML = `<span>${esc(ME.name)} · ${ME.role === 'admin' ? 'Administrator' : 'Tutor'}</span><button class="ghost" data-act="logout">Sign out</button>`;
+  
+  if (ME.role !== 'tutor') {
+    $('btnEditProf').style.display = 'none';
+  }
+
+  if (!DATA) {
+    $('sidebar').innerHTML = '';
+    $('mainContent').innerHTML = '<p class="muted">Loading…</p>';
+    return;
+  }
+
+  try {
+    if (ME.role === 'tutor') {
+      renderTutorLayout();
+    } else {
+      renderAdminLayout();
+    }
+  } catch (err) {
+    console.error(err);
+    $('mainContent').innerHTML = `<div class="card" style="color:var(--hi)"><h2>Dashboard Error</h2><p>${esc(err.message)}</p><pre style="white-space:pre-wrap">${esc(err.stack)}</pre></div>`;
+  }
+}
+
+function openProfileModal() {
+  PROFILE_MODAL_OPEN = true;
+  renderProfileModal();
+}
+
+function closeProfileModal() {
+  PROFILE_MODAL_OPEN = false;
+  document.getElementById('profileModal').innerHTML = '';
+}
+
+function renderProfileModal() {
+  if (!PROFILE_MODAL_OPEN) return;
+  const wrap = document.getElementById('profileModal');
+  wrap.innerHTML = `
+    <div class="modal-bg">
+      <div class="modal-card">
+        <h2>Edit Tutor Profile</h2>
+        <label>Display Name</label>
+        <input id="profName" type="text" value="${esc(ME.name)}">
+        <label>Subjects (comma separated)</label>
+        <input id="profSubjects" type="text" value="${esc(ME.subjects || '')}">
+        <label>Short Bio</label>
+        <textarea id="profBio" rows="4" style="margin-top:4px">${esc(ME.bio || '')}</textarea>
+        
+        <div style="margin-top:20px; border-top:2px dashed var(--line); padding-top:16px;">
+          <p class="muted" style="font-size:12px; margin-bottom:8px;">Danger Zone</p>
+          <button class="danger" data-act="deletetutor" style="width:100%">Delete Account</button>
+        </div>
+
+        <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px">
+          <button class="g" data-act="closeprofile">Cancel</button>
+          <button class="cta" data-act="saveprofile">Save changes</button>
+        </div>
+      </div>
+    </div>`;
+}
+
+$('f').onsubmit = async e => {
+  e.preventDefault();
+  $('err').textContent = '';
+  try {
+    const j = await api('/api/login', {email: $('e').value.trim(), password: $('p').value});
+    if (j.role === 'student') { $('err').textContent = 'Students use the quest game at /game.'; return; }
+    TOK = j.token; localStorage.setItem('sb_staff', TOK); ME = j;
+    await load();
+    if (ME.role === 'admin') await loadAdminTab();
+    render();
+  } catch (err) { $('err').textContent = err.message; }
+};
+
+function switchStaffTab(which) {
+  const si = document.getElementById('tabSignin'), su = document.getElementById('tabSignup');
+  const f = document.getElementById('f'), s = document.getElementById('signupForm');
+  if (which === 'signin') {
+    si.classList.add('on'); su.classList.remove('on');
+    f.hidden = false; s.hidden = true;
+  } else {
+    su.classList.add('on'); si.classList.remove('on');
+    f.hidden = true; s.hidden = false;
+  }
+}
+document.getElementById('tabSignin').addEventListener('click', () => switchStaffTab('signin'));
+document.getElementById('tabSignup').addEventListener('click', () => switchStaffTab('signup'));
+
+document.getElementById('signupForm').addEventListener('submit', async e => {
+  e.preventDefault();
+  const errEl = document.getElementById('suErr');
+  errEl.textContent = '';
+  const name = document.getElementById('suName').value.trim();
+  const email = document.getElementById('suEmail').value.trim();
+  const pass = document.getElementById('suPass').value;
+  if (name.length < 2) { errEl.textContent = 'Please enter your full name.'; return; }
+  if (!/^\S+@\S+\.\S+$/.test(email)) { errEl.textContent = 'Please enter a valid email.'; return; }
+  if (checkPasswordStrength(pass) < 3) {
+    errEl.textContent = 'Password must be at least 8 characters with uppercase, lowercase, and a number.';
+    return;
+  }
+  try {
+    const j = await api('/api/register', {name, email, password: pass, role: 'tutor', avatar: '🎓'});
+    if (j.role !== 'tutor') { errEl.textContent = 'That account is not a tutor account.'; return; }
+    TOK = j.token; localStorage.setItem('sb_staff', TOK); ME = j;
+    await load();
+    render();
+  } catch (err) { errEl.textContent = err.message; }
+});
+
+document.addEventListener('input', e => {
+  if (e.target.id !== 'bulkCsv') return;
+  BULK_CSV = e.target.value;
+  if (!BULK || !BULK.dry_run) return;
+  const stale = BULK_CSV !== BULK.csv;
+  const btn = document.getElementById('bulkCommitBtn'), note = document.getElementById('bulkStale');
+  if (btn) btn.hidden = stale;
+  if (note) note.hidden = !stale;
+});
+document.addEventListener('change', async e => {
+  if (e.target.id !== 'bulkFile' || !e.target.files[0]) return;
+  const file = e.target.files[0];
+  BULK = null; BULK_ERR = '';
+  if (file.size > 512 * 1024) { BULK_ERR = 'That file is larger than 512 KB.'; return render(); }
+  BULK_CSV = await file.text();
+  render();
+});
+
+document.addEventListener('click', async e => {
+  const el = e.target.closest('[data-act]');
+  if (!el) return;
+  const a = el.dataset.act;
+  MSG = '';
+  try {
+    if (a === 'theme') {
+      const next = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+      document.documentElement.dataset.theme = next;
+      try { localStorage.setItem('sb_theme', next); } catch (e) {}
+      return;
+    }
+    if (a === 'logout') return logout();
+    if (a === 'pick') { SEL = el.dataset.id === SEL ? null : el.dataset.id; return render(); }
+    if (a === 'tutortab') { TUTOR_TAB = el.dataset.t; return render(); }
+
+    if (a === 'edittutorprofile') { openProfileModal(); return; }
+    if (a === 'closeprofile') { closeProfileModal(); return; }
+    if (a === 'saveprofile') {
+      const name = document.getElementById('profName').value.trim();
+      const subjects = document.getElementById('profSubjects').value.trim();
+      const bio = document.getElementById('profBio').value.trim();
+      try {
+        const j = await api('/api/tutor/profile', {name, subjects, bio});
+        ME.name = j.name; ME.subjects = j.subjects; ME.bio = j.bio;
+        MSG = 'Profile updated.';
+        closeProfileModal();
+        await load();
+        render();
+      } catch (err) { alert(err.message); }
+      return;
+    }
+    
+    if (a === 'deletetutor') {
+      if (!confirm('Are you sure you want to delete your account? You will be logged out immediately.')) return;
+      try {
+        await api('/api/tutor/delete', {});
+        logout();
+        alert('Your account has been deleted.');
+      } catch (err) { alert(err.message); }
+      return;
+    }
+
+    if (a === 'permdelete') {
+      if (!confirm('Are you absolutely sure? This will permanently delete the user and all their data from the database. This cannot be undone.')) return;
+      try {
+        await api('/api/admin/users/permanent-delete', {id: el.dataset.id});
+        USERS = await api('/api/admin/users');
+        MSG = 'User permanently deleted.';
+      } catch (err) { MSG = err.message; }
+      return render();
+    }
+
+    if (a === 'addnote') {
+      const sid = el.dataset.id;
+      const note = document.getElementById('newNote').value.trim();
+      if (!note) return;
+      await api('/api/tutor/note', {student_id: sid, note});
+      MSG = 'Note added.';
+      await load();
+      return render();
+    }
+    if (a === 'assign') {
+      const sid = el.dataset.sid, mid = +el.dataset.mid;
+      await api('/api/tutor/assign', {student_id: sid, module_id: mid});
+      MSG = 'Retest assigned to student!';
+      return render();
+    }
+
+    if (a === 'admintab') {
+      ADMIN_TAB = el.dataset.t;
+      AUDIT = null; ITEMS = null; GRAPH = null; USERS = null; VAL_DATA = null; KAPPA = null; EDIT_USER = null;
+      await loadAdminTab();
+      return render();
+    }
+
+    if (a === 'tag') {
+      const iid = el.dataset.iid, letter = el.dataset.l;
+      const s = el.dataset.s || null;
+      await api('/api/admin/items/tag', {item_id: iid, letter, source: s});
+      if (ITEMS) {
+        for (const it of ITEMS) {
+          if (it.id === iid) {
+            for (const o of it.options) if (o.letter === letter) o.error_source = s;
+          }
+        }
+      }
+      AUDIT = null;
+      return render();
+    }
+
+    if (a === 'addedge') {
+      const f = +document.getElementById('gFrom').value;
+      const t = +document.getElementById('gTo').value;
+      try {
+        await api('/api/admin/graph/add', {from: f, to: t});
+        MSG = 'Edge added.';
+      } catch (err) {
+        MSG = err.message;
+      }
+      GRAPH = await api('/api/admin/graph');
+      AUDIT = null;
+      return render();
+    }
+
+    if (a === 'rmedge') {
+      const f = +el.dataset.from, t = +el.dataset.to;
+      await api('/api/admin/graph/remove', {from: f, to: t});
+      GRAPH = await api('/api/admin/graph');
+      AUDIT = null;
+      MSG = 'Edge removed.';
+      return render();
+    }
+
+    if (a === 'edituser') {
+      const id = el.dataset.id;
+      EDIT_USER = USERS.find(u => u.id === id);
+      return render();
+    }
+    if (a === 'canceluser') {
+      EDIT_USER = null;
+      return render();
+    }
+    if (a === 'genpass') {
+      document.getElementById(el.dataset.target).value = genPassword();
+      return;
+    }
+    if (a === 'staffsens') {
+      SENS_STAFF = {sid: el.dataset.id, data: null, error: ''};
+      render();
+      try { SENS_STAFF.data = await api('/api/staff/sensitivity', {student_id: el.dataset.id}); }
+      catch (err) { SENS_STAFF.error = err.message; }
+      return render();
+    }
+    if (a === 'bulkcheck') {
+      if (!BULK_CSV.trim()) { BULK = null; BULK_ERR = 'Choose a CSV file or paste CSV text first.'; return render(); }
+      BULK_BUSY = true; BULK_ERR = ''; render();
+      try {
+        const res = await api('/api/admin/users/bulk', {csv: BULK_CSV, commit: false});
+        BULK = {...res, csv: BULK_CSV};
+      } catch (err) { BULK = null; BULK_ERR = err.message; }
+      BULK_BUSY = false;
+      return render();
+    }
+    if (a === 'bulkcommit') {
+      if (!BULK || !BULK.dry_run) return;
+      BULK_BUSY = true; BULK_ERR = ''; render();
+      try {
+        const res = await api('/api/admin/users/bulk', {csv: BULK.csv, commit: true});
+        BULK = {...res, csv: BULK.csv};
+        BULK_CSV = '';
+        USERS = await api('/api/admin/users');
+        await load();
+      } catch (err) { BULK_ERR = err.message; }
+      BULK_BUSY = false;
+      return render();
+    }
+    if (a === 'bulkdownload') {
+      if (!BULK || !BULK.rows) return;
+      const q = v => /[",\r\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v;
+      const lines = [['name', 'email', 'temporary_password'].join(',')]
+        .concat(BULK.rows.filter(x => x.password).map(x => [x.name, x.email, x.password].map(q).join(',')));
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(new Blob(['\ufeff' + lines.join('\r\n') + '\r\n'], {type: 'text/csv;charset=utf-8'}));
+      link.download = 'new-student-passwords.csv';
+      document.body.appendChild(link); link.click(); link.remove();
+      setTimeout(() => URL.revokeObjectURL(link.href), 1000);
+      return;
+    }
+    if (a === 'createuser') {
+      const name = document.getElementById('nuName').value;
+      const email = document.getElementById('nuEmail').value;
+      const role = document.getElementById('nuRole').value;
+      const password = document.getElementById('nuPass').value;
+      try {
+        await api('/api/admin/users/create', {name, email, role, password});
+        MSG = 'User created.';
+        USERS = await api('/api/admin/users');
+        await load();
+        document.getElementById('nuName').value = '';
+        document.getElementById('nuEmail').value = '';
+        return render();
+      } catch (err) { MSG = err.message; return render(); }
+    }
+    if (a === 'saveuser') {
+      const id = el.dataset.id;
+      const name = document.getElementById('euName').value;
+      const role = document.getElementById('euRole').value;
+      const is_active = document.getElementById('euActive').value;
+      try {
+        const password = document.getElementById('euPass').value;
+        await api('/api/admin/users/update', {id, name, role, is_active, password: password || undefined});
+        MSG = 'User updated.';
+        USERS = await api('/api/admin/users');
+        await load();
+        EDIT_USER = null;
+        return render();
+      } catch (err) { MSG = err.message; return render(); }
+    }
+
+    if (a === 'saveval') {
+      const idx = +el.dataset.idx;
+      const v = VAL_DATA[idx];
+      const sel = document.getElementById(`val_${idx}`);
+      const lbl = sel.value;
+      if (!lbl) return;
+      await api('/api/admin/validation/save', {
+        attempt_id: v.attempt_id, item_id: v.item_id, chosen: v.chosen,
+        system_label: v.system_label, expert_label: lbl
+      });
+      VAL_DATA[idx].expert_label = lbl;
+      KAPPA = await api('/api/admin/validation/kappa');
+      return render();
+    }
+
+  } catch (err) {
+    MSG = err.message; render();
+  }
+});
+
+(async () => {
+  if (TOK) {
+    try {
+      ME = await api('/api/me');
+      if (ME.role === 'student') logout();
+      else {
+        await load();
+        if (ME.role === 'admin') await loadAdminTab();
+      }
+    } catch (e) { logout(); }
+  }
+  render();
+})();
+</script>
+</body>
+</html>
